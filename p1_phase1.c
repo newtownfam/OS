@@ -3,30 +3,37 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/resource.h>
 
 struct rusage usage; // struct created in order to use getrusage function
+struct timeval clockTime; // struct to access gettimeofday
 
 /* Parent process function
  * keeps track of time and waits on the child process
  * prints out the statistics */
-void parentProcess(long startTime)
+void parentProcess()
 {
-	// variables for calculating time
-	time_t endTime, startTime;
-	double timeTaken;
+	/* variables for calculating time */
+	long endTime, startTime, elapsedTime;
 	int pagefaults; // pagefaults
 	int pagefaults_r; // reclaimed pagefaults
 
-	gettimeofday(&startTime, NULL); // gets the time before the child started
-	wait(0); // waits for the child process to be finished
-	gettimeofday(&endTime, NULL); // gets the time after the child has finished
-	//printf("Start time: %ld, End: %ld\n", startTime, endTime);
-	timeTaken = ((double)(endTime.sec - startTime.sec))*1000; // calculates the time in milliseconds
 	
+	/* find elapsed time */
+	gettimeofday(&clockTime, NULL); // get time before child process starts
+	startTime = (clockTime.tv_sec * 1000) + (clockTime.tv_usec / 1000); // convert to ms
+	
+	wait(NULL); // waits for the child process to be finished
+	
+	gettimeofday(&clockTime, NULL); // get time after child process ends
+	endTime = (clockTime.tv_sec * 1000) + (clockTime.tv_usec / 1000); // convert to ms
+	
+	elapsedTime = endTime - startTime; // record elapsed time
+
 	/* use getrusage function for page faults (not sure if working properly) */
 	getrusage(RUSAGE_CHILDREN, &usage); //RTFMP
 	pagefaults_r = usage.ru_minflt; // getrusage function to show reclaimed page faults
@@ -34,7 +41,7 @@ void parentProcess(long startTime)
 
 	/* print out statistics */
 	printf("\n-- Statistics --\n");
-	printf("\tElapsed Time: %f milliseconds\n", timeTaken);
+	printf("\tElapsed Time: %ld milliseconds\n", elapsedTime);
 	printf("\tPage faults: %d\n", pagefaults); // needs implementation
 	printf("\tPage faults (relaimed): %d\n\n", pagefaults_r); // needs implementation
 }
@@ -50,9 +57,9 @@ int main(int argc, int argv[])
 {
 	int returnVal; // hold the value returned by fork
 	char userInput; // hold the option chosen by the user
-	long startTime; // hold the start time of the child process
 	char * args[2];
 	char * option;
+	char buff;
 	args[1] = NULL;
 
 	/* Initial startup title */
@@ -67,6 +74,7 @@ int main(int argc, int argv[])
 		printf("\t2. ls      : Prints out the result of a listing on a user-specified path\n");
 		printf("Option? (control C to exit): ");
 		scanf("%c", &userInput);
+		scanf("%c", &buff);
 		printf("\n");
 
 		/* fork the parent process to create a child */
@@ -77,7 +85,7 @@ int main(int argc, int argv[])
 		if(returnVal != 0)
 		{
 			// parent process gets a return value equal to the child PID
-			parentProcess(startTime);
+			parentProcess();
 		}
 		else
 		{
@@ -100,7 +108,7 @@ int main(int argc, int argv[])
 					childProcess(option, args);
 					break;
 				default:
-					printf("Invalid input");
+					printf("Invalid input\n");
 					break;
 			}
 		}
