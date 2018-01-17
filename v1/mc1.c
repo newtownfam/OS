@@ -20,7 +20,7 @@ void parentProcess()
 	/* variables for calculating time */
 	long endTime, startTime, elapsedTime;
 	int pagefaults; // pagefaults
-	int pagefaults_r; // reclaimed pagefaults
+	int pagefaults_r; // reclaimed pagefaults FIX THIS
 
 	
 	/* find elapsed time */
@@ -65,7 +65,7 @@ int main(int argc, int argv[])
 	/* Initial startup title */
 	printf(" ==== Mid-Day Commander, vO ====\n");
 
-	while(!0)
+	while(userInput != 'e')
 	{
 		/* Print out all the options and take input */
 		printf("What's popping Commander? What command would you like to run?\n");
@@ -73,10 +73,10 @@ int main(int argc, int argv[])
 		printf("\t1. last    : Prints out the result of the last command\n");
 		printf("\t2. ls      : Prints out the result of a listing on a user-specified path\n");
 		printf("\ta. add command : adds a new command to the menu\n");
-		printf("\tc. change directory :Changes process working directory");
-		printf("\te. exit : exit midday Commander");
-		printf("\tp. pwd : Prints working directory");
-		printf("Option? (control C to exit): ");
+		printf("\tc. change directory :Changes process working directory\n");
+		printf("\te. exit : exit midday Commander\n"); // working: exits terminal
+		printf("\tp. pwd : Prints working directory\n");
+		printf("Option? (control C to exit): \n");
 		scanf("%c", &userInput);
 		scanf("%c", &buff);
 		printf("\n");
@@ -100,7 +100,7 @@ int main(int argc, int argv[])
 					option = "whoami";
 					for(int i; i<strlen(option); i++)
 					{
-						printf("--- %s ---\n", option[i]);
+						printf("--- %c ---\n", option[i]);
 					}
 					args[0] = option;
 					childProcess(option, args);
@@ -109,7 +109,7 @@ int main(int argc, int argv[])
 					option = "last";
 					for(int i; i<strlen(option); i++)
 					{
-						printf("--- %s ---\n", option[i]);
+						printf("--- %c ---\n", option[i]);
 					}
 					args[0] = option;
 					childProcess(option, args);
@@ -118,44 +118,44 @@ int main(int argc, int argv[])
 					option = "ls";
 					for(int i; i<strlen(option); i++)
 					{
-						printf("--- %s ---\n", option[i]);
+						printf("--- %c ---\n", option[i]);
 					}
 					args[0] = option;
 					childProcess(option, args);
 					break;
 				case 'a':
-					option = 'a'
+					*option = 'a';
 					for(int i; i<strlen(option); i++)
 					{
-						printf("--- %s ---\n", option[i]);
+						printf("--- %c ---\n", option[i]);
 					}
 					args[0] = option;
 					childProcess(option, args);
 				case 'c':
-					option = 'c'
+					*option = 'c';
 					for(int i; i<strlen(option); i++)
 					{
-						printf("--- %s ---\n", option[i]);
-					{}
+						printf("--- %c ---\n", option[i]);
+					}
 					args[0] = option;
 					childProcess(option, args);
 				case 'e':
-					option = 'e'
-					return 0;
+					break;
 				case 'p':
-					option = 'p'
+					*option = 'p';
 					for(int i; i<strlen(option); i++)
 					{
-						printf("--- %s ---\n", option[i]);
+						printf("--- %c ---\n", option[i]);
 					}
 					args[0] = option;
 					childProcess(option, args);
 				default:
 					printf("Invalid input\n");
 					break;
+				}
+
 			}
 		}
-	}
-
-}
+		return 0;
+	}	
 
