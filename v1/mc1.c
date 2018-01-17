@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/resource.h>
+#include <assert.h>
 
 struct rusage usage; // struct created in order to use getrusage function
 struct timeval clockTime; // struct to access gettimeofday
@@ -50,43 +51,44 @@ void parentProcess()
  * Exec to become the wanted function */
 void childProcess(char * option, char ** args)
 {
-	int rc = execvp(option, args); // system fcuntion to execute the three commands
+	int rc = execvp(option, args); // system function to execute the three commands
 	assert(rc==0);
 }
-
 /* Arguments function
  * Gets user inputted arguments */
-int getArgs(char * argString, char * args)
+char ** getArgs()
 {
-	/* User input */
-	scanf("Arguments?: %s", argString);
+	char thing[100];
+	char ** args;
+	char * buff;
+	char * guy;
+	int i = 0;
 
-	/* Check if string is too long */
-	if(sizeof(argString) > 128)
-	{
-		printf("Error. String too long");
-		return -1;
-	}
+	/* User input */
+	printf("Arguments: ");
+	scanf("%s", thing);
 
 	/* Store the arguments in args[i] */
-	int i = 0;
-	for(i=1; i<=32; i++)
-	{
-		args[i] = strtok(" ");
+	buff = strtok(thing, " ");
+	while(buff != NULL)
+	{	
+		args[i] = buff;
+		buff = strtok(NULL, " ");
+		i++;
 	}
-	args[i+1] = NULL;
-	return 0;
+	return args;
 }
 
 int main(int argc, int argv[])
 {
 	int returnVal; // hold the value returned by fork
 	char userInput; // hold the option chosen by the user
-	char * args[34]; // holds the arguments
-	char * option[1024]; // holds the option
-	char * argString[130]; // holds the total argument string
+	char *args[10]; // holds the arguments
+	char * option; // holds the option
+	//char argString[1024]; // holds the total argument string
+	//argString[1023] = 0x0;
 	char buff; // buff to eat up the enter key
-	args[1] = NULL;
+	//args[1] = 0;
 
 	/* Initial startup title */
 	printf(" ==== Mid-Day Commander, vO ====\n");
@@ -102,7 +104,7 @@ int main(int argc, int argv[])
 		printf("\tc. change directory : Changes process working directory\n"); // done: needs testing
 		printf("\te. exit : exit midday Commander\n"); // working: exits terminal
 		printf("\tp. pwd : Prints working directory\n");
-		printf("Option? (control C to exit): \n");
+		printf("Option? (control C to exit): ");
 		scanf("%c", &userInput);
 		scanf("%c", &buff);
 		printf("\n");
@@ -122,11 +124,30 @@ int main(int argc, int argv[])
 			// child process gets a return value equal to zero
 
 			/* Get arguments if necessary */
-			if(userInput != 'a' && userInput != 'c' && userInput != 'e' && userInput != "p")
+			if(userInput != 'a' && userInput != 'c' && userInput != 'e' && userInput != 'p')
 			{
-				returnVal = getArgs(argString, args);
-				assert(returnVal == 0);
-			}
+
+				char thing[100];
+				char * buff;
+				int i = 0;
+
+				/* User input */
+				printf("Arguments (type N for none): ");
+				scanf("%s", thing);
+				printf("\n");
+				if(strcmp(thing, "N") != 0)
+				{
+					/* Store the arguments in args[i] */
+					buff = strtok(thing, " ");
+					while(buff != NULL)
+					{	
+						i++;
+						args[i] = buff;
+						buff = strtok(NULL, " ");
+					}
+				}
+				args[i+1] = NULL;
+			} 
 			switch(userInput) 
 			{
 				case '0':
@@ -146,19 +167,17 @@ int main(int argc, int argv[])
 					break;
 				case 'a':
 					*option = 'a';
-					args[0] = option;
 					childProcess(option, args);
 				case 'c':
-					*option = 'c';
-					scanf("Directory: %s", &option);
-					chdir(option;
+					printf("Directory?: \n");
+					scanf("%s", option);
+					chdir(option);
 				case 'e':
 					break;
 				case 'p':
-					*option = 'p';
-					if(getcwd(option, sizeOf(option)) != NULL)
+					if(getcwd(option, strlen(option)) != NULL)
 					{
-						// print the cwd
+						printf("%s", option);
 					}
 				default:
 					printf("Invalid input\n");
