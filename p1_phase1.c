@@ -16,15 +16,16 @@ struct rusage usage; // struct created in order to use getrusage function
 void parentProcess(long startTime)
 {
 	// variables for calculating time
-	long endTime;
+	time_t endTime, startTime;
 	double timeTaken;
 	int pagefaults; // pagefaults
 	int pagefaults_r; // reclaimed pagefaults
 
+	gettimeofday(&startTime, NULL); // gets the time before the child started
 	wait(0); // waits for the child process to be finished
-	endTime = clock(); // gets the time after the child has finished
+	gettimeofday(&endTime, NULL); // gets the time after the child has finished
 	//printf("Start time: %ld, End: %ld\n", startTime, endTime);
-	timeTaken = ((double)(endTime - startTime)/CLOCKS_PER_SEC)*1000; // calculates the time in milliseconds
+	timeTaken = ((double)(endTime.sec - startTime.sec))*1000; // calculates the time in milliseconds
 	
 	/* use getrusage function for page faults (not sure if working properly) */
 	getrusage(RUSAGE_CHILDREN, &usage); //RTFMP
@@ -48,7 +49,7 @@ void childProcess(char * option, char ** args)
 int main(int argc, int argv[])
 {
 	int returnVal; // hold the value returned by fork
-	int userInput; // hold the option chosen by the user
+	char userInput; // hold the option chosen by the user
 	long startTime; // hold the start time of the child process
 	char * args[2];
 	char * option;
@@ -65,13 +66,12 @@ int main(int argc, int argv[])
 		printf("\t1. last    : Prints out the result of the last command\n");
 		printf("\t2. ls      : Prints out the result of a listing on a user-specified path\n");
 		printf("Option? (control C to exit): ");
-		scanf("%d", &userInput);
+		scanf("%c", &userInput);
 		printf("\n");
 
 		/* fork the parent process to create a child */
 		returnVal = fork();
-		time_t seconds;
-		startTime = clock();
+		//time_t seconds;
 
 		/* Run the chlild or parent function depending on the return value */
 		if(returnVal != 0)
@@ -84,17 +84,17 @@ int main(int argc, int argv[])
 			// child process gets a return value equal to 0
 			switch(userInput) 
 			{
-				case 0:
+				case '0':
 					option = "whoami";
 					args[0] = option;
 					childProcess(option, args);
 					break;
-				case 1:
+				case '1':
 					option = "last";
 					args[0] = option;
 					childProcess(option, args);
 					break;
-				case 2:
+				case '2':
 					option = "ls";
 					args[0] = option;
 					childProcess(option, args);
