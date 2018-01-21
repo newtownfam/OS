@@ -131,6 +131,11 @@ int main(int argc, int argv[])
 				char * buff;
 				int i = 0;
 
+				if(userInput == 2)
+				{
+					i++;
+				}
+
 				/* User input */
 				printf("Arguments (type N for none): ");
 				scanf("%s", thing);
@@ -162,7 +167,11 @@ int main(int argc, int argv[])
 					break;
 				case '2':
 					option = "ls";
+					char * path;
+					printf("Specify Path: ");
+					scanf("%c", &path);
 					args[0] = option;
+					args[1] = path;
 					childProcess(option, args);
 					break;
 				case 'a':
