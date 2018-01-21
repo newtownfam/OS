@@ -167,29 +167,32 @@ int main(int argc, int argv[])
 					break;
 				case '2':
 					option = "ls";
-					char path;
+					char * path;
 					printf("Specify Path: \n");
-					scanf("%c", &path);
-					printf("Your path was: %s", &path);
+					scanf("%s\n", path);
+					printf("Your path was: %s\n", path);
 					args[0] = option;
-					args[1] = &path;
+					args[1] = path;
 					childProcess(option, args);
 					break;
 				case 'a':
 					*option = 'a';
-					childProcess(option, args);
+					//childProcess(option, args);
+					break;
 				case 'c':
 					printf("Directory?: \n");
 					scanf("%s", option);
 					chdir(option);
+					break;
 				case 'e':
 					break;
 				case 'p':
-					if(getcwd(option, strlen(option)) != NULL)
+					if(getcwd(option, strlen(option)) == NULL)
 					{
-						printf("%s", option);
+						printf("%s\n", option);
 					}
-				default:
+					break
+;				default:
 					printf("Invalid input\n");
 					break;
 				}
