@@ -89,6 +89,7 @@ int main(int argc, int argv[])
 	//argString[1023] = 0x0;
 	char buff; // buff to eat up the enter key
 	//args[1] = 0;
+	char path[20];
 
 	/* Initial startup title */
 	printf(" ==== Mid-Day Commander, vO ====\n");
@@ -167,9 +168,8 @@ int main(int argc, int argv[])
 					break;
 				case '2':
 					option = "ls";
-					char * path;
 					printf("Specify Path: \n");
-					scanf("%s\n", path);
+					scanf("%s", path);
 					printf("Your path was: %s\n", path);
 					args[0] = option;
 					args[1] = path;
