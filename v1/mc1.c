@@ -62,7 +62,7 @@ int getArgs(char * argString, char * args)
 	scanf("Arguments?: %s", argString);
 
 	/* Check if string is too long */
-	if(argString > 128)
+	if(sizeof(argString) > 128)
 	{
 		printf("Error. String too long");
 		return -1;
