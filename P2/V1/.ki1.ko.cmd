@@ -1,0 +1,1 @@
+cmd_/home/student/Documents/OS/P2/V1/ki1.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/student/Documents/OS/P2/V1/ki1.ko /home/student/Documents/OS/P2/V1/ki1.o /home/student/Documents/OS/P2/V1/ki1.mod.o ;  true
