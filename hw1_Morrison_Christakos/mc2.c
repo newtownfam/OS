@@ -38,10 +38,6 @@ struct processes
  * prints out the statistics */
 int parentProcess(struct processes bgProcesses[], int bgPending, int bgRunning, pid_t rv)
 {
-	/* Implement background process capability
-	 * step 1. create data structure to keep track of background processes running
-	 * step 2. -r running processes list prints out the processes from step 1
-	 * step 3. change waiting and implement the data structure*/
 
 	/* variables for calculating time */
 	long endTime, startTime, elapsedTime; // time variables
@@ -53,7 +49,6 @@ int parentProcess(struct processes bgProcesses[], int bgPending, int bgRunning, 
 	startTime = (clockTime.tv_sec * 1000) + (clockTime.tv_usec / 1000); // convert to ms
 	
 	wait(NULL);
-	//waitpid(rv, NULL, WNOHANG);
 
 	gettimeofday(&clockTime, NULL); // get time after child process ends
 
@@ -92,6 +87,24 @@ void childProcess(char * option, char ** args)
 	assert(rc==0);
 }
 
+void updateBG(struct processes bgProcesses[], int bgRunning)
+{
+	int x = 0;
+	while((x = wait3(NULL, WNOHANG, NULL)) > 0)
+	{
+		for(int i = 0; i<100; i++)
+		{
+			if(x == bgProcesses[i].pid)
+			{
+				bgProcesses[i].pid = 0;
+				bgProcesses[i].num = 0;
+				bgRunning--;
+				break;
+			}
+		}
+	}
+}
+
 /* main */
 int main(int argc, char ** argv)
 {
@@ -106,7 +119,7 @@ int main(int argc, char ** argv)
 
 	struct info commands[400]; // holds new commands
 	struct info currentCommand;
-        struct info emptyCommand;
+    struct info emptyCommand;
 	for(int i = 0; i < 32; i++)
 	{
 		emptyCommand.args[i] = NULL;
@@ -316,6 +329,7 @@ int main(int argc, char ** argv)
 				break;
 			case 'r':
 				printf("\n~~~~~~Background boyes~~~~~~~\n");
+				updateBG(bgProcesses, bgRunning);
 				for(int m = 0; m<200; m++)
 				{
 					if(bgProcesses[m].num!=0)
@@ -351,6 +365,12 @@ int main(int argc, char ** argv)
 					{
 						parentProcess(bgProcesses, current, bgRunning, returnVal);
 					}
+					else
+					{
+						bgProcesses[bgRunning].num = userInput[0];
+						bgProcesses[bgRunning].pid = returnVal;
+						bgRunning++;
+					}
 				}
 				else if(returnVal == 0 && current == 0) // child and background
 				{
@@ -361,10 +381,7 @@ int main(int argc, char ** argv)
 					}
 					else if(spoon > 0)
 					{
-						bgProcesses[bgRunning].pid = returnVal;
 						parentProcess(bgProcesses, current, bgRunning, returnVal);
-						bgProcesses[bgRunning].num = 0;
-						bgRunning--;
 						exit(0);
 					}
 					else
@@ -389,6 +406,8 @@ int main(int argc, char ** argv)
 					printf ("Error\n");
 				}
 				}
+
+				updateBG(bgProcesses, bgRunning);
 			
 		}
 		return 0;
