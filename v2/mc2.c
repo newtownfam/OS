@@ -10,6 +10,8 @@
 #include <sys/resource.h>
 #include <assert.h>
 
+#define x
+
 struct rusage usage; // struct created in order to use getrusage function
 struct timeval clockTime; // struct to access gettimeofday
 
@@ -153,6 +155,7 @@ int main(int argc, char ** argv[])
 	/* loop until exit is called*/
 	while(exit != 1)
 	{
+		printf("exit: %i\n", exit);
 		int returnVal; // hold the value returned by fork
 		char *args[100]; // holds the arguments
 		//char argString[1024]; // holds the total argument string
@@ -185,6 +188,20 @@ int main(int argc, char ** argv[])
 		printf("\tr. prints running background processes\n");
 		printf("Option? (control C to exit): ");
 
+		/*For taking an input file */
+		/*if (argv[1])
+		{
+			file = fopen(*argv[0], "r");
+			if (file)
+			{
+				while(c != EOF)
+				{
+					putchar(c);
+					c = fgetc(file);
+					exit = 1;				
+				}
+			}
+		}*/
 		/* take input */
 		scanf("%c", &userInput);
 		scanf("%c", &buff);
@@ -201,7 +218,7 @@ int main(int argc, char ** argv[])
 
 			char thing[150];
 			char * buffer;
-			int i = 1;
+			int i = 0;
 
 			if(userInput == '2')
 			{
@@ -216,10 +233,11 @@ int main(int argc, char ** argv[])
 			if(strcmp(thing, "N") != 0)
 			{
 				/* Store the arguments in args[i] */
-				buffer = strtok(thing, " ");
+				buffer = strtok(thing, " ,\\");
 
 				while(buffer != NULL)
 				{	
+					i++;
 					args[i] = buffer;
 					if(strcmp(buffer, "&")==0)
 					{
@@ -229,8 +247,8 @@ int main(int argc, char ** argv[])
 						printf("Bg process set\n");
 						bgProcesses[bgTotal].num = bgTotal;
 					}
-					buffer = strtok(NULL, " ");
-					i++;
+					printf("buffer: %s\n", buffer);
+					buffer = strtok(NULL, " ,\\");
 				}
 			}
 			args[i+1] = NULL;
