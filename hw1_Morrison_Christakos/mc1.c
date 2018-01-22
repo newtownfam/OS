@@ -92,17 +92,20 @@ struct info
 /* main */
 int main(int argc, char ** argv[])
 {
-
 	struct info commands[100]; // holds new commands
 	int exit = 0; // hold the option chosen by the user
 	int k = 3; // integer to keep track of user-added commands
+	FILE *file; // create the ability to read a file
+	char c; // character used to read input file
 
+	
 	/* Initial startup title */
 	printf(" ==== Mid-Day Commander, vO ====\n");
 
 	/* loop until exit is called*/
 	while(exit != 1)
 	{
+		printf("exit: %i\n", exit);
 		int returnVal; // hold the value returned by fork
 		char *args[34]; // holds the arguments
 		//char argString[1024]; // holds the total argument string
@@ -133,10 +136,24 @@ int main(int argc, char ** argv[])
 		printf("\tp. pwd : Prints working directory\n");
 		printf("Option? (control C to exit): ");
 
+		/*For taking an input file */
+		if (argv[1])
+		{
+			file = fopen(*argv[0], "r");
+			if (file)
+			{
+				while(c != EOF)
+				{
+					putchar(c);
+					c = fgetc(file);
+					exit = 1;				
+				}
+			}
+		}
 		/* take input */
 		scanf("%c", &userInput);
 		scanf("%c", &buff);
-		printf("\n");
+		//printf("\n");
 
 		/* fork the parent process to create a child */
 		returnVal = fork();
@@ -223,7 +240,7 @@ int main(int argc, char ** argv[])
 					chdir(option2);
 					break;
 				case 'e':
-					printf("exiting");
+					printf("exiting...\n");
 					exit = 1;
 					break;
 				case 'p':
@@ -242,14 +259,14 @@ int main(int argc, char ** argv[])
 							/* run the necessary command */
 							args[0] = commands[n].name;
 							childProcess(commands[n].name, args);
-						}
-						n++;
+							n++;
 					}
 					break;
 				}
 
 			}
 		}
-		return 0;
 	}	
-
+	fclose(file);
+	return 0;
+}

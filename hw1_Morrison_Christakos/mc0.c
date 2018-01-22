@@ -74,6 +74,7 @@ int main(int argc, char ** argv[])
 		printf("\t0. whoami  : Prints out the result of the whoami command\n");
 		printf("\t1. last    : Prints out the result of the last command\n");
 		printf("\t2. ls      : Prints out the result of a listing on a user-specified path\n");
+		printf("Option? (control C to exit): ");
 		scanf("%c", &userInput);
 		scanf("%c", &buff);
 		printf("\n");
