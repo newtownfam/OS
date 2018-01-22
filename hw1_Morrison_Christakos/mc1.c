@@ -105,7 +105,7 @@ int main(int argc, char ** argv[])
 	/* loop until exit is called*/
 	while(exit != 1)
 	{
-		printf("exit: %i\n", exit);
+		printf("exit value: %i\n", exit);
 		int returnVal; // hold the value returned by fork
 		char *args[34]; // holds the arguments
 		//char argString[1024]; // holds the total argument string
