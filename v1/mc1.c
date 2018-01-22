@@ -79,27 +79,47 @@ char ** getArgs()
 	return args;
 }
 
-int main(int argc, int argv[])
+struct info
 {
-	int returnVal; // hold the value returned by fork
-	char userInput; // hold the option chosen by the user
-	char *args[10]; // holds the arguments
-	//char argString[1024]; // holds the total argument string
-	//argString[1023] = 0x0;
-	char buff; // buff to eat up the enter key
-	//args[1] = 0;
-	char path[20];
+	int num;
+	char name[20];
+};
+
+int main(int argc, char ** argv[])
+{
+
+	struct info commands[100]; // holds new commands
+	int exit = 0; // hold the option chosen by the user
+	int k = 3; // integer to keep track of user-added commands
 
 	/* Initial startup title */
 	printf(" ==== Mid-Day Commander, vO ====\n");
 
-	while(userInput != 'e')
+	while(exit != 1)
 	{
+		int returnVal; // hold the value returned by fork
+		char *args[10]; // holds the arguments
+		//char argString[1024]; // holds the total argument string
+		//argString[1023] = 0x0;
+		char buff; // buff to eat up the enter key
+		//args[1] = 0;
+		char path[20];
+		char dir[1024];
+		char userInput;
+
 		/* Print out all the options and take input */
 		printf("What's popping Commander? What command would you like to run?\n");
 		printf("\t0. whoami  : Prints out the result of the whoami command\n");
 		printf("\t1. last    : Prints out the result of the last command\n");
 		printf("\t2. ls      : Prints out the result of a listing on a user-specified path\n");
+
+		int n=3;
+		while(n!=k)
+		{
+			printf("\t%d. user command: %s\n", commands[n].num, commands[n].name);
+			n++;
+		}
+
 		printf("\ta. add command : adds a new command to the menu\n");
 		printf("\tc. change directory : Changes process working directory\n"); // done: needs testing
 		printf("\te. exit : exit midday Commander\n"); // working: exits terminal
@@ -128,7 +148,7 @@ int main(int argc, int argv[])
 			{
 
 				char thing[100];
-				char * buff;
+				char * buffer;
 				int i = 0;
 
 				if(userInput == '2')
@@ -143,17 +163,18 @@ int main(int argc, int argv[])
 				if(strcmp(thing, "N") != 0)
 				{
 					/* Store the arguments in args[i] */
-					buff = strtok(thing, " ");
-					while(buff != NULL)
+					buffer = strtok(thing, " ");
+					while(buffer != NULL)
 					{	
 						i++;
-						args[i] = buff;
-						buff = strtok(NULL, " ");
+						args[i] = buffer;
+						buffer = strtok(NULL, " ");
 					}
 				}
 				args[i+1] = NULL;
 			}
 			char * option; // holds the option 
+			char option2[100];
 			switch(userInput) 
 			{
 				case '0':
@@ -176,7 +197,11 @@ int main(int argc, int argv[])
 					childProcess(option, args);
 					break;
 				case 'a':
-					printf("exiting");
+					printf("Enter function name: \n");
+					scanf("%s", commands[k].name);
+					scanf("%c", &buff);
+					commands[k].num = k;
+					k++;
 					break;
 				case 'c':
 					printf("Directory?: \n");
@@ -185,15 +210,27 @@ int main(int argc, int argv[])
 					break;
 				case 'e':
 					printf("exiting");
+					exit = 1;
 					break;
 				case 'p':
-					if(getcwd(option, 100) == NULL)
+					if(getcwd(dir, strlen(dir)) == NULL)
 					{
-						printf("yolo%s\n", option);
+						printf("Current Directory: %s\n", dir);
 					}
 					break
 ;				default:
-					printf("Invalid input\n");
+					n = 2;
+					printf("bruh");
+					while(n!=k)
+					{
+						printf("hello");
+						if(strcmp("" + userInput, "" + commands[n].num) != 0)
+						{
+							printf("sup");
+							childProcess(commands[n].name, args);
+						}
+						n++;
+					}
 					break;
 				}
 
