@@ -4,14 +4,21 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/resource.h>
 #include <assert.h>
 
+#define MAX_BUFFER 256
 struct rusage usage; // struct created in order to use getrusage function
 struct timeval clockTime; // struct to access gettimeofday
+struct info // holds name and number of user commands
+{
+	int num;
+	char name[20];
+};
 
 /* Parent process function
  * keeps track of time and waits on the child process
@@ -55,61 +62,28 @@ void childProcess(char * option, char ** args)
 	int rc = execvp(option, args); // system function to execute the three commands
 	assert(rc==0);
 }
-/* Arguments function
- * NOT IN USE
- * Gets user inputted arguments */
-/*char ** getArgs()
-{
-	char thing[100];
-	char ** args;
-	char * buff;
-	char * guy;
-	int i = 0;
-
-	// User Input
-	printf("Arguments: ");
-	scanf("%s", thing);
-
-	// Store the arguments in args[i]
-	buff = strtok(thing, " ");
-	while(buff != NULL)
-	{	
-		args[i] = buff;
-		buff = strtok(NULL, " ");
-		i++;
-	}
-	return args;
-}*/
-
-/* struct info holds the name and number of user commands
- */
-struct info
-{
-	int num;
-	char name[20];
-};
 
 /* main */
-int main(int argc, char ** argv[])
+int main(int argc, char * argv[])
 {
+	char str[100]; //take input strings
 	struct info commands[100]; // holds new commands
-	int exit = 0; // hold the option chosen by the user
 	int k = 3; // integer to keep track of user-added commands
-	FILE *file; // create the ability to read a file
-	char c; // character used to read input file
+	//char str[10];
+	int count = 0;
+	FILE *file;
 
 	
 	/* Initial startup title */
 	printf(" ==== Mid-Day Commander, vO ====\n");
 
 	/* loop until exit is called*/
-	while(exit != 1)
+	while(1)
 	{
-		printf("exit value: %i\n", exit);
+		count++;
+		printf("while-loop count: %d\n", count);
 		int returnVal; // hold the value returned by fork
 		char *args[34]; // holds the arguments
-		//char argString[1024]; // holds the total argument string
-		//argString[1023] = 0x0;
 		char buff; // buff to eat up the enter key
 		char path[1024]; // holds path for 2.
 		char dir[1024]; // holds directory name for c.
@@ -134,26 +108,30 @@ int main(int argc, char ** argv[])
 		printf("\tc. change directory : Changes process working directory\n"); // done: needs testing
 		printf("\te. exit : exit midday Commander\n"); // working: exits terminal
 		printf("\tp. pwd : Prints working directory\n");
-		printf("Option? (control C to exit): ");
+		printf("Option? (control C to exit): \n");
 
 		/*For taking an input file */
-		if (argv[1])
-		{
-			file = fopen(*argv[0], "r");
-			if (file)
-			{
-				while(c != EOF)
-				{
-					putchar(c);
-					c = fgetc(file);
-					exit = 1;				
-				}
-			}
-		}
+
 		/* take input */
-		scanf("%c", &userInput);
-		scanf("%c", &buff);
-		//printf("\n");
+		if(!feof(stdin))
+		{
+			scanf("%c", &userInput);
+			scanf("%c", &buff);
+			printf("\n");
+		}
+		else
+		{
+			return 0;
+		}
+
+		printf("*****YOU ENTERED: %c*****\n", userInput);
+
+		/* check for input */ 
+		if(userInput == 'e')
+			{
+				printf("Peace out, Commander\n");
+				return 0
+;			}
 
 		/* fork the parent process to create a child */
 		returnVal = fork();
@@ -165,6 +143,7 @@ int main(int argc, char ** argv[])
 			// parent process gets a return value equal to the child PID
 			parentProcess();
 		}
+		
 		else
 		{
 			// child process gets a return value equal to zero
@@ -183,10 +162,12 @@ int main(int argc, char ** argv[])
 				}
 
 				/* User input */
-				printf("Arguments (type N for none): \n");
+				printf("Arguments (type N for none): ");
 				scanf("%s", thing);
 				printf("\n");
-				if(strcmp(thing, "N") != 0)
+				printf("* YOU ENTERED: %s*\n", thing);
+				printf("\n");
+				if((strcmp(thing, "N") != 0) != 0)
 				{
 					/* Store the arguments in args[i] */
 					buffer = strtok(thing, " ");
@@ -199,6 +180,7 @@ int main(int argc, char ** argv[])
 				}
 				args[i+1] = NULL;
 			}
+
 			char * option; // holds the option 
 			char option2[1024]; // holds the option if scanf() must be used
 
@@ -239,10 +221,6 @@ int main(int argc, char ** argv[])
 					scanf("%c", &buff); // eat the enter key
 					chdir(option2);
 					break;
-				case 'e':
-					printf("exiting...\n");
-					exit = 1;
-					break;
 				case 'p':
 					if(getcwd(dir, sizeof(dir)) != NULL)
 					{
@@ -263,10 +241,8 @@ int main(int argc, char ** argv[])
 					}
 					break;
 				}
-
 			}
 		}
 	}	
-	fclose(file);
 	return 0;
 }
