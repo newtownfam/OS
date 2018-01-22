@@ -1,0 +1,18 @@
+0
+1
+2
+N
+/home/student
+q
+a
+free -m &
+3
+a
+sleep 2 &
+r
+4
+c
+/home/student/Downloads
+p
+r
+e
