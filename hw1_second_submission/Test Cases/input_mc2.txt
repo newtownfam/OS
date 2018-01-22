@@ -3,16 +3,13 @@
 2
 N
 /home/student
-q
 a
-free -m &
+sleep 1 &
+r
 3
 a
-sleep 2 &
-r
-4
+free -m
 c
 /home/student/Downloads
 p
 r
-e

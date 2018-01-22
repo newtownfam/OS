@@ -18,19 +18,21 @@ struct timeval clockTime; // struct to access gettimeofday
  */
 struct info
 {
-	char *args[32];
-	int numargs;
-	int num;
-	int bg;
-	char *name;
+	char *args[32]; // holds arguments
+	int numargs; // # of arguments
+	int num; // command #
+	int bg; // is it a background command?
+	char *name; // command name
 };
 
+/* Struct processes holds information about a running process
+*/
 struct processes
 {
-	int num;
-	int pid;
-	int bgPending;
-	struct timeval start_time, end_time;
+	int num; // process #
+	int pid; // process pid
+	int bgPending; // is the process a bg process?
+	struct timeval start_time, end_time; // time variables
 };
 
 /* Parent process function
@@ -38,10 +40,6 @@ struct processes
  * prints out the statistics */
 int parentProcess(struct processes bgProcesses[], int bgPending, int bgRunning, pid_t rv)
 {
-	/* Implement background process capability
-	 * step 1. create data structure to keep track of background processes running
-	 * step 2. -r running processes list prints out the processes from step 1
-	 * step 3. change waiting and implement the data structure*/
 
 	/* variables for calculating time */
 	long endTime, startTime, elapsedTime; // time variables
@@ -52,8 +50,8 @@ int parentProcess(struct processes bgProcesses[], int bgPending, int bgRunning, 
 	gettimeofday(&clockTime, NULL); // get time before child process starts
 	startTime = (clockTime.tv_sec * 1000) + (clockTime.tv_usec / 1000); // convert to ms
 	
+	/* wait for child to finish */
 	wait(NULL);
-	//waitpid(rv, NULL, WNOHANG);
 
 	gettimeofday(&clockTime, NULL); // get time after child process ends
 
@@ -92,11 +90,33 @@ void childProcess(char * option, char ** args)
 	assert(rc==0);
 }
 
+/* updateBg will update the background process data structure */
+void updateBG(struct processes bgProcesses[], int bgRunning)
+{
+	int x = 0;
+	// wait for any finished bg processes
+	while((x = wait3(NULL, WNOHANG, NULL)) > 0)
+	{
+		for(int i = 0; i<100; i++)
+		{
+			if(x == bgProcesses[i].pid)
+			{
+				// updaet bgProcesses
+				bgProcesses[i].pid = 0;
+				bgProcesses[i].num = 0;
+				bgRunning--;
+				break;
+			}
+		}
+	}
+}
+
 /* main */
 int main(int argc, char ** argv)
 {
 	struct processes bgProcesses[200]; // holds background processes
 
+	// fill bgProcesses with default values
 	for(int j=0; j<200; j++)
 	{
 		bgProcesses[j].pid = 0;
@@ -105,16 +125,14 @@ int main(int argc, char ** argv)
 	}
 
 	struct info commands[400]; // holds new commands
-	struct info currentCommand;
-        struct info emptyCommand;
+	struct info currentCommand; // holds the current command
+    struct info emptyCommand; // an empty command
 	for(int i = 0; i < 32; i++)
 	{
 		emptyCommand.args[i] = NULL;
 	}
-	//int exit = 0; // hold the option chosen by the user
+	
 	int k = 3; // integer to keep track of user-added commands
-	//FILE *file; // create the ability to read a file
-	//char c; // character used to read input file
 	int bgRunning = 0;
 
 	
@@ -166,13 +184,14 @@ int main(int argc, char ** argv)
 		}
 		userInput[strlen(userInput)-1] = '\0';
 		printf("User input: %s\n", userInput);
-		
+
+		/* Check for exit condition */
 		if(userInput[0] == 'e')
 		{
 			printf("Peace out, Commander\n");
 			return 0;
 		}
-		/* Get arguments if necessary */
+		/* Get arguments if necessary... option 2 only */
 		if (userInput[0] == '2')
 		{
 			int i = 0;
@@ -211,34 +230,9 @@ int main(int argc, char ** argv)
 
 			args[i+1] = NULL;
 		}
-		//time_t seconds;
-
-
-		/* Run the chlild or parent function depending on the return value */
-		/*if(returnVal != 0)
-		{
-			if(current == 0)
-			{
-				bgProcesses[bgTotal].pid = returnVal;
-			}
-
-			// parent process gets a return value equal to the child PID
-			kill = parentProcess(bgProcesses, current, bgRunning, returnVal);
-
-			for(int i=0; i<200; i++)
-			{
-				if(bgProcesses[i].pid == kill)
-				{
-					bgProcesses[i].num = 0;
-					bgProcesses[i].pid = 0;
-				}
-			}
-		}*/
-		// child process gets a return value equal to zero
-		char option[100]; // holds the option 
-		//int u = atoi(userInput);
-
-		/* Fill option, args[0], etc. and perform commands */
+		
+		char option[100]; // holds option
+		/* Fill option, args[0], etc., prepare to fork*/
 		switch(userInput[0]) 
 		{
 			case '0':
@@ -249,9 +243,11 @@ int main(int argc, char ** argv)
 			case '1':
 				strncpy(option, "last", 100);
 				args[0] = option;
+				printf("--Last--\n");
 				break;
 			case '2':
 				strncpy(option, "ls", 100);
+				printf("--ls--\n");
 				printf("Specify Path: \n");
 				if(fgets(path, 100, stdin) == NULL)
 				{
@@ -285,6 +281,7 @@ int main(int argc, char ** argv)
 				else
 					commands[k].bg = -1;
 				
+				/* store command information */
 				char* token = strtok(split, " ");
 				commands[k].name = strdup(token);
 				commands[k].args[0] = strdup(token);
@@ -294,7 +291,6 @@ int main(int argc, char ** argv)
 				    commands[k].numargs++;
 				}
 				//strcpy(commands[k].name, thing);
-				printf("Command: %s\n", split); 
 				commands[k].num = k;// update ammount of user-added commands
 				k++;
 				break;
@@ -305,10 +301,8 @@ int main(int argc, char ** argv)
 					printf("End of file reached\n");
 					break;
 				}
-				printf("%s\n", option);
 				option[strlen(option)-2] = '\0';
 				chdir(option);
-				printf("ADSFADS");
 				break;
 			case 'p':
 				strncpy(option, "p", 100);
@@ -316,6 +310,7 @@ int main(int argc, char ** argv)
 				break;
 			case 'r':
 				printf("\n~~~~~~Background boyes~~~~~~~\n");
+				updateBG(bgProcesses, bgRunning);
 				for(int m = 0; m<200; m++)
 				{
 					if(bgProcesses[m].num!=0)
@@ -334,7 +329,7 @@ int main(int argc, char ** argv)
 						args[0] = commands[n].name;
 						currentCommand = commands[n];
 						current = currentCommand.bg;
-						printf("\ncommands: %s\n", commands[n].name);
+						printf("\n~~~~%s~~~~\n", commands[n].name);
 						break;	
 					}
 					
@@ -344,6 +339,7 @@ int main(int argc, char ** argv)
 		fflush(stdout);
 			if(userInput[0] != 'a' && userInput[0] != 'e' &&userInput[0] !='r' && userInput[0] != 'c')
 			{
+				/* time to fork */
 				returnVal = fork();
 				if(returnVal > 0) // parent
 				{
@@ -351,9 +347,17 @@ int main(int argc, char ** argv)
 					{
 						parentProcess(bgProcesses, current, bgRunning, returnVal);
 					}
+					else // background
+					{
+						/* add the background process to bgProcess data structure */
+						bgProcesses[bgRunning].num = userInput[0];
+						bgProcesses[bgRunning].pid = returnVal;
+						bgRunning++;
+					}
 				}
 				else if(returnVal == 0 && current == 0) // child and background
 				{
+					/* fork into grandchildren to exec and return to child */
 					int spoon = fork();
 					if(spoon == 0) 
 					{
@@ -361,18 +365,15 @@ int main(int argc, char ** argv)
 					}
 					else if(spoon > 0)
 					{
-						bgProcesses[bgRunning].pid = returnVal;
 						parentProcess(bgProcesses, current, bgRunning, returnVal);
-						bgProcesses[bgRunning].num = 0;
-						bgRunning--;
-						exit(0);
+						exit(0); // kill extra process
 					}
-					else
+					else // case if fork fails
 					{
 						printf("Error\n");
 					}
 				}
-				else if(returnVal == 0)
+				else if(returnVal == 0) // child not background
 				{
 					currentCommand.args[0] = strdup(args[0]);
 					for(int i = 0; i < 5; i++)
@@ -382,13 +383,15 @@ int main(int argc, char ** argv)
 					printf("\n");
 					execvp(args[0], currentCommand.args);
 					perror("execvp\n");
-					exit(1);
+					exit(1); // exit in case of failure
 				}
-				else
+				else // fail case
 				{
 					printf ("Error\n");
 				}
 				}
+
+				updateBG(bgProcesses, bgRunning); // update any background processes in case 'r' was not called
 			
 		}
 		return 0;
