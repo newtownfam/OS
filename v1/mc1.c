@@ -84,7 +84,6 @@ int main(int argc, int argv[])
 	int returnVal; // hold the value returned by fork
 	char userInput; // hold the option chosen by the user
 	char *args[10]; // holds the arguments
-	char * option; // holds the option
 	//char argString[1024]; // holds the total argument string
 	//argString[1023] = 0x0;
 	char buff; // buff to eat up the enter key
@@ -153,7 +152,8 @@ int main(int argc, int argv[])
 					}
 				}
 				args[i+1] = NULL;
-			} 
+			}
+			char * option; // holds the option 
 			switch(userInput) 
 			{
 				case '0':
@@ -176,8 +176,7 @@ int main(int argc, int argv[])
 					childProcess(option, args);
 					break;
 				case 'a':
-					*option = 'a';
-					//childProcess(option, args);
+					printf("exiting");
 					break;
 				case 'c':
 					printf("Directory?: \n");
@@ -185,11 +184,12 @@ int main(int argc, int argv[])
 					chdir(option);
 					break;
 				case 'e':
+					printf("exiting");
 					break;
 				case 'p':
-					if(getcwd(option, strlen(option)) == NULL)
+					if(getcwd(option, 100) == NULL)
 					{
-						printf("%s\n", option);
+						printf("yolo%s\n", option);
 					}
 					break
 ;				default:
