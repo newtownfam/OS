@@ -10,7 +10,6 @@
 #include <sys/resource.h>
 #include <assert.h>
 
-#define x
 
 struct rusage usage; // struct created in order to use getrusage function
 struct timeval clockTime; // struct to access gettimeofday
@@ -27,13 +26,14 @@ struct processes
 {
 	int num;
 	int pid;
+	int bgPending;
 	struct timeval start_time, end_time;
 };
 
 /* Parent process function
  * keeps track of time and waits on the child process
  * prints out the statistics */
-void parentProcess(struct processes bgProcesses[], int bgPending, int bgRunning)
+int parentProcess(struct processes bgProcesses[], int bgPending, int bgRunning, pid_t rv)
 {
 
 	/* Implement background process capability
@@ -45,17 +45,15 @@ void parentProcess(struct processes bgProcesses[], int bgPending, int bgRunning)
 	long endTime, startTime, elapsedTime; // time variables
 	int pagefaults; // pagefaults
 	int pagefaults_r; // reclaimed pagefaults FIX THIS
-	pid_t lastpid, lastpid2;
+	pid_t lastpid;
 
-	
-	if(bgPending != 0)
-	{
+
 		/* find elapsed time */
 		gettimeofday(&clockTime, NULL); // get time before child process starts
 		startTime = (clockTime.tv_sec * 1000) + (clockTime.tv_usec / 1000); // convert to ms
 		
-		wait(0);
-		wait3(NULL, 0, &usage);
+		wait(NULL);
+		//waitpid(rv, NULL, WNOHANG);
 
 		gettimeofday(&clockTime, NULL); // get time after child process ends
 
@@ -68,63 +66,28 @@ void parentProcess(struct processes bgProcesses[], int bgPending, int bgRunning)
 		pagefaults = usage.ru_majflt; //shows non-reclaimed page faults
 
 		/* print out statistics */
-		printf("\n-- Statistics for--\n");
+		if(bgPending == 0)
+		{
+			printf("\n--  Background Task Complete --\n");
+		}
+		else
+		{
+			printf("\n-- Task Complete --\n");
+		}
 		printf("\tElapsed Time: %ld milliseconds\n", elapsedTime);
 		printf("\tPage faults: %d\n", pagefaults); // needs implementation
 		printf("\tPage faults (relaimed): %d\n\n", pagefaults_r); // needs implementation
 
 		pagefaults = 0;
 
-		pid_t pid = 0;
+		return 0;
 
-	}
-	else
-	{
-		bgPending = -1;
-
-		pid_t pid = 0;
-
-		gettimeofday(&clockTime, NULL); // get time before child process starts
-		startTime = (clockTime.tv_sec * 1000) + (clockTime.tv_usec / 1000); // convert to ms
-		
-		int rc = fork();
-
-		if(rc!=0)
-		{
-			while (pid != -1)
-			{
-				pid = waitpid(pid, NULL, WNOHANG);
-
-				if(pid != 0 && pid!=-1)
-				{
-					gettimeofday(&clockTime, NULL); // get time after child process ends
-					endTime = (clockTime.tv_sec * 1000) + (clockTime.tv_usec / 1000); // convert to ms
-					elapsedTime = endTime - startTime; // record elapsed time
-					getrusage(RUSAGE_CHILDREN, &usage); // RTFMP			
-					pagefaults_r = usage.ru_minflt; // getrusage function to show reclaimed page faults
-					pagefaults = usage.ru_majflt; //shows non-reclaimed page faults
-
-
-					printf("\n~~~~Background Process Completed~~~~\n");
-					printf("Process ID #: %d\n", pid);
-
-					/* print out statistics */
-					printf("\n-- Statistics for--\n");
-					printf("\tElapsed Time: %ld milliseconds\n", elapsedTime);
-					printf("\tPage faults: %d\n", pagefaults); // needs implementation
-					printf("\tPage faults (relaimed): %d\n\n", pagefaults_r); // needs implementation
-				}
-			}
-		}
-	}
 }
-
 
 /* Child process function
  * Exec to become the wanted function */
 void childProcess(char * option, char ** args)
 {
-	printf("\n~~~~~~~~~~%s~~~~~~~~~~\n", option);
 	int rc = execvp(option, args); // system function to execute the three commands
 	assert(rc==0);
 }
@@ -138,25 +101,29 @@ int main(int argc, char ** argv[])
 	{
 		bgProcesses[j].pid = 0;
 		bgProcesses[j].num = 0;
+		bgProcesses[j].bgPending = -1;
 	}
 
-	struct info commands[200]; // holds new commands
-	int exit = 0; // hold the option chosen by the user
+	struct info commands[400]; // holds new commands
+	//int exit = 0; // hold the option chosen by the user
 	int k = 3; // integer to keep track of user-added commands
-	FILE *file; // create the ability to read a file
-	char c; // character used to read input file
+	//FILE *file; // create the ability to read a file
+	//char c; // character used to read input file
 	int bgRunning = 0;
 	int bgTotal;
+	int getLineCount;
 
 	
 	/* Initial startup title */
-	printf(" ==== Mid-Day Commander, v2 ====\n");
+	printf("\n ==== Mid-Day Commander, v2 ====\n");
 
 	/* loop until exit is called*/
-	while(exit != 1)
+	while(1)
 	{
-		printf("exit: %i\n", exit);
-		int returnVal; // hold the value returned by fork
+		char *thing = NULL;
+		char *buffer = NULL;
+		size_t buffSize = 80;
+		int returnVal=0; // hold the value returned by fork
 		char *args[100]; // holds the arguments
 		//char argString[1024]; // holds the total argument string
 		//argString[1023] = 0x0;
@@ -164,20 +131,19 @@ int main(int argc, char ** argv[])
 		char path[1024]; // holds path for 2.
 		char dir[1024]; // holds directory name for c.
 		char userInput; // holds the char of user input
-		int bgPending = -1;
+		int current = -1;
+		int kill = 0;
 
 		/* Print out all the options and take input */
-		printf("What's popping Commander? What command would you like to run?\n");
+		printf("\nWhat's popping Commander? What command would you like to run?\n");
 		printf("\t0. whoami  : Prints out the result of the whoami command\n");
 		printf("\t1. last    : Prints out the result of the last command\n");
 		printf("\t2. ls      : Prints out the result of a listing on a user-specified path\n");
 
 		/* Prints out all user-added commands */
-		int n=3;
-		while(n!=k)
+		for(int n=3; n<k; n++)
 		{
 			printf("\t%d. user command: %s\n", commands[n].num, commands[n].name);
-			n++;
 		}
 
 		/* prints out a, c, e, and p commands */
@@ -188,24 +154,10 @@ int main(int argc, char ** argv[])
 		printf("\tr. prints running background processes\n");
 		printf("Option? (control C to exit): ");
 
-		/*For taking an input file */
-		/*if (argv[1])
-		{
-			file = fopen(*argv[0], "r");
-			if (file)
-			{
-				while(c != EOF)
-				{
-					putchar(c);
-					c = fgetc(file);
-					exit = 1;				
-				}
-			}
-		}*/
 		/* take input */
-		scanf("%c", &userInput);
-		scanf("%c", &buff);
-		printf("\n");
+		getLineCount = getline(&thing, &buffSize, stdin);
+		thing[getLineCount - 1] = '\0';
+		userInput = thing[0];
 		
 		if(userInput == 'e')
 			{
@@ -216,8 +168,7 @@ int main(int argc, char ** argv[])
 		if(userInput != 'a' && userInput != 'c' && userInput != 'e' && userInput != 'p' && userInput != 'r')
 		{
 
-			char thing[150];
-			char * buffer;
+			
 			int i = 0;
 
 			if(userInput == '2')
@@ -227,57 +178,59 @@ int main(int argc, char ** argv[])
 
 			/* User input */
 			printf("Arguments (type N for none): ");
-			scanf("%s", thing);
-			scanf("%c", &buff);
-			printf("\n");
+			getLineCount = getline(&thing, &buffSize, stdin);
+			thing[getLineCount-1] = '\0';
 			if(strcmp(thing, "N") != 0)
 			{
 				/* Store the arguments in args[i] */
-				buffer = strtok(thing, " ,\\");
+				buffer = strtok(thing, " ");
 
 				while(buffer != NULL)
 				{	
 					i++;
-					args[i] = buffer;
 					if(strcmp(buffer, "&")==0)
 					{
-						bgPending = 0;
+						bgProcesses[bgRunning].bgPending = 0;
+						current = 0;
+						bgProcesses[bgRunning].num = bgRunning;
 						bgRunning++;
-						bgTotal++;
-						printf("Bg process set\n");
-						bgProcesses[bgTotal].num = bgTotal;
 					}
-					printf("buffer: %s\n", buffer);
-					buffer = strtok(NULL, " ,\\");
+					else
+						args[i] = strdup(buffer);
+					buffer = strtok(NULL, " ");
+
 				}
 			}
+
 			args[i+1] = NULL;
 		}
-
-		/* fork the parent process to create a child */
-		returnVal = fork();
 		//time_t seconds;
 
 
 		/* Run the chlild or parent function depending on the return value */
-		if(returnVal != 0)
+		/*if(returnVal != 0)
 		{
-			if(bgPending == 0)
+			if(current == 0)
 			{
-				printf("Bg pid set\n");
 				bgProcesses[bgTotal].pid = returnVal;
-				printf("\n\nyolo: %d\n", bgProcesses[bgTotal].pid);
 			}
 
 			// parent process gets a return value equal to the child PID
-			parentProcess(bgProcesses, bgPending, bgRunning);
-		}
-		else
-		{
+			kill = parentProcess(bgProcesses, current, bgRunning, returnVal);
+
+			for(int i=0; i<200; i++)
+			{
+				if(bgProcesses[i].pid == kill)
+				{
+					bgProcesses[i].num = 0;
+					bgProcesses[i].pid = 0;
+				}
+			}
+		}*/
 			// child process gets a return value equal to zero
 			char * option; // holds the option 
 			char option2[1024]; // holds the option if scanf() must be used
-			printf("bgPending: %d and %d\n", bgPending, bgTotal);
+			//int u = atoi(userInput);
 
 			/* Fill option, args[0], etc. and perform commands */
 			switch(userInput) 
@@ -285,12 +238,10 @@ int main(int argc, char ** argv[])
 				case '0':
 					option = "whoami";
 					args[0] = option;
-					childProcess(option, args);
 					break;
 				case '1':
 					option = "last";
 					args[0] = option;
-					childProcess(option, args);
 					break;
 				case '2':
 					option = "ls";
@@ -299,16 +250,15 @@ int main(int argc, char ** argv[])
 					printf("Your path was: %s\n", path);
 					args[0] = option; // store "ls"
 					args[1] = path; // store path name
-					childProcess(option, args);
 					break;
 				case 'a':
-					printf("Enter function name: \n");
+					printf("Enter function name for %d: \n", k);
 
 					/* Save user-added command parameters into commands */
 					scanf("%s", commands[k].name);
 					scanf("%c", &buff);
-					commands[k].num = k;
-					k++; // update ammount of user-added commands
+					commands[k].num = k;// update ammount of user-added commands
+					k++;
 					break;
 				case 'c':
 					printf("Directory?: \n");
@@ -333,22 +283,66 @@ int main(int argc, char ** argv[])
 					}
 					break;
 				default: // default will handle user-added commands
-					n = 3;
-					while(n!=k)
+					for(int n=3; n<k; n++)
 					{	
 						/* find the user-added command that matched userInput */
 						if(atoi(&userInput) == commands[n].num)
 						{
 							/* run the necessary command */
+							printf("here\n");
+							printf("%s\n", commands[n].name);
 							args[0] = commands[n].name;
-							childProcess(commands[n].name, args);
-							n++;
+							printf("\ncommands: %s\n", commands[n].name);
+							break;	
+						}
+						
 					}
-					break;
 				}
 
+				if(userInput != 'a' && userInput != 'e' &&userInput !='r' && userInput != 'c' && userInput != 'p')
+				{
+				returnVal = fork();
+				if(returnVal > 0) // parent
+				{
+					if(current != 0) // not background
+					{
+						parentProcess(bgProcesses, current, bgRunning, returnVal);
+					}
+					else // background
+					{
+						// do nothing
+					}
+				}
+				else if(returnVal == 0 && current == 0) // child and background
+				{
+					int spoon = fork();
+					if(spoon == 0) 
+					{
+						execvp(args[0], (char * const *)args);
+					}
+					else if(spoon > 0)
+					{
+						bgProcesses[bgRunning].pid = returnVal;
+						parentProcess(bgProcesses, current, bgRunning, returnVal);
+						bgProcesses[bgRunning].num = 0;
+						bgRunning--;
+						exit(0);
+					}
+					else
+					{
+						printf("Error\n");
+					}
+				}
+				else if(returnVal == 0)
+				{
+					execvp(args[0], (char * const *)args);
+				}
+				else
+				{
+					printf ("Error\n");
+				}
 			}
+			
 		}
+		return 0;
 	}	
-	return 0;
-}
