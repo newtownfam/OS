@@ -24,7 +24,6 @@ struct info
 struct processes
 {
 	int num;
-	char name[20];
 	int pid;
 	struct timeval start_time, end_time;
 };
@@ -54,45 +53,16 @@ void parentProcess(struct processes bgProcesses[], int bgPending, int bgRunning)
 		startTime = (clockTime.tv_sec * 1000) + (clockTime.tv_usec / 1000); // convert to ms
 		
 		wait(0);
+		wait3(NULL, 0, &usage);
 
-		while(lastpid2!=0 && lastpid2!=-1); // waits for the child process to be finished
-		{
-			lastpid = wait3(NULL, WUNTRACED, &usage);
-			for(int i = 0; i<bgRunning; i++)
-			{
-				if(lastpid == bgProcesses[i].pid)
-				{
-					pid_t id = bgProcesses[i].pid;
-					int l = bgProcesses[i].num;
-
-					bgProcesses[i].pid = 0;
-					bgRunning--;
-
-					bgProcesses[l].num = 0;
-					strcpy(bgProcesses[l].name, "");
-
-
-					/* use getrusage function for page faults (not sure if working properly) */
-					getrusage(RUSAGE_CHILDREN, &usage); // RTFMP
-					pagefaults_r = usage.ru_minflt; // getrusage function to show reclaimed page faults
-					pagefaults = usage.ru_majflt; //shows non-reclaimed page faults
-
-					/* print out statistics */
-					printf("\n-- Statistics for--\n");
-					printf("\tElapsed Time: %ld milliseconds\n", elapsedTime);
-					printf("\tPage faults: %d\n", pagefaults); // needs implementation
-					printf("\tPage faults (relaimed): %d\n\n", pagefaults_r); // needs implementation
-				}
-			}
-		}
-	
 		gettimeofday(&clockTime, NULL); // get time after child process ends
 
 		endTime = (clockTime.tv_sec * 1000) + (clockTime.tv_usec / 1000); // convert to ms
 		elapsedTime = endTime - startTime; // record elapsed time
 
 		/* use getrusage function for page faults (not sure if working properly) */
-		getrusage(RUSAGE_CHILDREN, &usage); // RTFMP			pagefaults_r = usage.ru_minflt; // getrusage function to show reclaimed page faults
+		getrusage(RUSAGE_CHILDREN, &usage); // RTFMP			
+		pagefaults_r = usage.ru_minflt; // getrusage function to show reclaimed page faults
 		pagefaults = usage.ru_majflt; //shows non-reclaimed page faults
 
 		/* print out statistics */
@@ -100,32 +70,41 @@ void parentProcess(struct processes bgProcesses[], int bgPending, int bgRunning)
 		printf("\tElapsed Time: %ld milliseconds\n", elapsedTime);
 		printf("\tPage faults: %d\n", pagefaults); // needs implementation
 		printf("\tPage faults (relaimed): %d\n\n", pagefaults_r); // needs implementation
+
+		pagefaults = 0;
+
+		pid_t pid = 0;
+
 	}
+	else
+	{
 		bgPending = -1;
-		bgRunning++;
-		bgProcesses[bgRunning].num = bgRunning;
 
-		while(lastpid != 0 && lastpid !=-1)
+		pid_t pid = 0;
+
+		gettimeofday(&clockTime, NULL); // get time before child process starts
+		startTime = (clockTime.tv_sec * 1000) + (clockTime.tv_usec / 1000); // convert to ms
+		
+		int rc = fork();
+
+		if(rc!=0)
 		{
-			lastpid = wait3(NULL, WNOHANG, &usage);
-			for(int i = 0; i<bgRunning; i++)
+			while (pid != -1)
 			{
-				if(lastpid == bgProcesses[i].pid)
+				pid = waitpid(pid, NULL, WNOHANG);
+
+				if(pid != 0 && pid!=-1)
 				{
-					pid_t id = bgProcesses[i].pid;
-					int l = bgProcesses[i].num;
-
-					bgProcesses[i].pid = 0;
-					bgRunning--;
-
-					bgProcesses[l].num = 0;
-					strcpy(bgProcesses[l].name, "");
-
-
-					/* use getrusage function for page faults (not sure if working properly) */
-					getrusage(RUSAGE_CHILDREN, &usage); // RTFMP
+					gettimeofday(&clockTime, NULL); // get time after child process ends
+					endTime = (clockTime.tv_sec * 1000) + (clockTime.tv_usec / 1000); // convert to ms
+					elapsedTime = endTime - startTime; // record elapsed time
+					getrusage(RUSAGE_CHILDREN, &usage); // RTFMP			
 					pagefaults_r = usage.ru_minflt; // getrusage function to show reclaimed page faults
 					pagefaults = usage.ru_majflt; //shows non-reclaimed page faults
+
+
+					printf("\n~~~~Background Process Completed~~~~\n");
+					printf("Process ID #: %d\n", pid);
 
 					/* print out statistics */
 					printf("\n-- Statistics for--\n");
@@ -136,6 +115,7 @@ void parentProcess(struct processes bgProcesses[], int bgPending, int bgRunning)
 			}
 		}
 	}
+}
 
 
 /* Child process function
@@ -143,46 +123,28 @@ void parentProcess(struct processes bgProcesses[], int bgPending, int bgRunning)
 void childProcess(char * option, char ** args)
 {
 	printf("\n~~~~~~~~~~%s~~~~~~~~~~\n", option);
-	sleep(3);
 	int rc = execvp(option, args); // system function to execute the three commands
 	assert(rc==0);
 }
-/* Arguments function
- * NOT IN USE
- * Gets user inputted arguments */
-/*char ** getArgs()
-{
-	char thing[100];
-	char ** args;
-	char * buff;
-	char * guy;
-	int i = 0;
-
-	// User Input
-	printf("Arguments: ");
-	scanf("%s", thing);
-
-	// Store the arguments in args[i]
-	buff = strtok(thing, " ");
-	while(buff != NULL)
-	{	
-		args[i] = buff;
-		buff = strtok(NULL, " ");
-		i++;
-	}
-	return args;
-}*/
 
 /* main */
 int main(int argc, char ** argv[])
 {
 	struct processes bgProcesses[200]; // holds background processes
+
+	for(int j=0; j<200; j++)
+	{
+		bgProcesses[j].pid = 0;
+		bgProcesses[j].num = 0;
+	}
+
 	struct info commands[200]; // holds new commands
 	int exit = 0; // hold the option chosen by the user
 	int k = 3; // integer to keep track of user-added commands
 	FILE *file; // create the ability to read a file
 	char c; // character used to read input file
 	int bgRunning = 0;
+	int bgTotal;
 
 	
 	/* Initial startup title */
@@ -191,7 +153,6 @@ int main(int argc, char ** argv[])
 	/* loop until exit is called*/
 	while(exit != 1)
 	{
-		printf("exit: %i\n", exit);
 		int returnVal; // hold the value returned by fork
 		char *args[100]; // holds the arguments
 		//char argString[1024]; // holds the total argument string
@@ -224,20 +185,6 @@ int main(int argc, char ** argv[])
 		printf("\tr. prints running background processes\n");
 		printf("Option? (control C to exit): ");
 
-		/*For taking an input file */
-		/*if (argv[1])
-		{
-			file = fopen(*argv[0], "r");
-			if (file)
-			{
-				while(c != EOF)
-				{
-					putchar(c);
-					c = fgetc(file);
-					exit = 1;				
-				}
-			}
-		}*/
 		/* take input */
 		scanf("%c", &userInput);
 		scanf("%c", &buff);
@@ -249,7 +196,7 @@ int main(int argc, char ** argv[])
 				return 0;
 			}
 		/* Get arguments if necessary */
-		if(userInput != 'a' && userInput != 'c' && userInput != 'e' && userInput != 'p')
+		if(userInput != 'a' && userInput != 'c' && userInput != 'e' && userInput != 'p' && userInput != 'r')
 		{
 
 			char thing[150];
@@ -277,6 +224,10 @@ int main(int argc, char ** argv[])
 					if(strcmp(buffer, "&")==0)
 					{
 						bgPending = 0;
+						bgRunning++;
+						bgTotal++;
+						printf("Bg process set\n");
+						bgProcesses[bgTotal].num = bgTotal;
 					}
 					buffer = strtok(NULL, " ");
 					i++;
@@ -293,6 +244,13 @@ int main(int argc, char ** argv[])
 		/* Run the chlild or parent function depending on the return value */
 		if(returnVal != 0)
 		{
+			if(bgPending == 0)
+			{
+				printf("Bg pid set\n");
+				bgProcesses[bgTotal].pid = returnVal;
+				printf("\n\nyolo: %d\n", bgProcesses[bgTotal].pid);
+			}
+
 			// parent process gets a return value equal to the child PID
 			parentProcess(bgProcesses, bgPending, bgRunning);
 		}
@@ -301,7 +259,7 @@ int main(int argc, char ** argv[])
 			// child process gets a return value equal to zero
 			char * option; // holds the option 
 			char option2[1024]; // holds the option if scanf() must be used
-			int m = 0;
+			printf("bgPending: %d and %d\n", bgPending, bgTotal);
 
 			/* Fill option, args[0], etc. and perform commands */
 			switch(userInput) 
@@ -348,14 +306,14 @@ int main(int argc, char ** argv[])
 					break;
 				case 'r':
 					printf("\n~~~~~~Background boyes~~~~~~~\n");
-					while(bgProcesses[m].num!=200)
+					for(int m = 0; m<200; m++)
 					{
-						if(bgProcesses[m].num!=0)
+						if(bgProcesses[m].num!=0 && bgProcesses[m].pid!=0)
 						{
-							printf("%d, %s\n", bgProcesses[m].num, bgProcesses[m].name);
-							m++;
+							printf("BG Process #: %d, BG PID: %d\n", bgProcesses[m].num, bgProcesses[m].pid);
 						}
 					}
+					break;
 				default: // default will handle user-added commands
 					n = 3;
 					while(n!=k)
