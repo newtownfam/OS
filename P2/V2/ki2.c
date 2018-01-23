@@ -22,19 +22,20 @@ struct ancestry
 
 /************************* Our Code *****************************************/
 
-asmlinkage long cs3013_syscall2(unsigned short * target_pid, struct ancestry *response)
+asmlinkage long new_sys_cs3013_syscall2(unsigned short * target_pid, struct ancestry *response)
 { 
 
   struct task_struct * tree;
   struct task_struct * task;
   struct list_head * list;
   struct ancestry info;
+  pid_t tpid;
   int i = 0;
 
   /* Gets the current task
    * Use task->comm for task name and task->pid for the task PID */
   //struct task_struct *task = current;
-  struct task_struct *task = pid_task(find_vpid(*target_pid), PIDTYPE_PID);
+  task = pid_task(find_vpid(*target_pid), PIDTYPE_PID);
 
   /* Check if copy from user succeeds */
   if(copy_from_user(&tree, response, sizeof(response)))
@@ -43,7 +44,7 @@ asmlinkage long cs3013_syscall2(unsigned short * target_pid, struct ancestry *re
   }
 
   // print the target's pid
-  pid_t tpid = task_pid_nr(tree);
+  tpid = task_pid_nr(tree);
   printk(KERN_INFO "Target PID: %i\n", tpid);
 
   // get children
@@ -52,17 +53,17 @@ asmlinkage long cs3013_syscall2(unsigned short * target_pid, struct ancestry *re
   {
     task = list_entry(list, struct task_struct, sibling);
     printk(KERN_INFO "Child PID: %d\n", task->pid);
-    info.children[i]
+    info.children[i] = task->pid;
     i++;
   }
 
   // get siblings
   i = 0;
-  list_for_each(list, &tree->siblings)
+  list_for_each(list, &tree->sibling)
   {
   	task = list_entry(list, struct task_struct, sibling);
   	printk(KERN_INFO "Sibling PID: %d\n", task->pid);
-  	info.siblings[i];
+  	info.siblings[i] = task->pid;
   	i++;
   }
 
@@ -72,7 +73,7 @@ asmlinkage long cs3013_syscall2(unsigned short * target_pid, struct ancestry *re
   {
   	task = task->real_parent;
   	printk(KERN_INFO "Parent PID: %d\n", task->pid);
-  	info.ancestors[i] = task;
+  	info.ancestors[i] = task->pid;
   	i++;
   }
 
