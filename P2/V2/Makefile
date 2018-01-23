@@ -1,5 +1,5 @@
 ccflags-y=-std=gnu99
-obj-m := procAncestry.o
+obj-m := ki2.o
 KDIR := /lib/modules/$(shell uname -r)/build
 
 all:

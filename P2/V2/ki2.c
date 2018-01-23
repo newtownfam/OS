@@ -4,27 +4,30 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/syscalls.h>
-#include <linux/shed.h>
+#include <linux/sched.h>
 #include <linux/list.h>
-#include <asm/current.h>
-#include <asm-generic/uaccess.h>
+#include <asm/uaccess.h>
+#include <asm-generic/current.h>
 #include <asm/errno.h>
 
 unsigned long **sys_call_table;
+asmlinkage long (*ref_sys_cs3013_syscall2)(void);
 
 struct ancestry 
 {
   pid_t ancestors[10];
   pid_t siblings[100];
   pid_t children[100];
-}
+};
 
 /************************* Our Code *****************************************/
 
 asmlinkage long cs3013_syscall2(unsigned short * target_pid, struct ancestry *response)
 { 
-  struct ancestry *copy;
-  struct task_struct info;
+  struct ancestry copy;
+  struct task_struct *info;
+  struct list_head *list;
+  struct task_struct *task;
   // list_for_each
   // list_entry
   // task_pid_nr
@@ -35,12 +38,20 @@ asmlinkage long cs3013_syscall2(unsigned short * target_pid, struct ancestry *re
   {
     return EFAULT;
   }
-  // get the current task's pid
-  pid_t pid = task_pid_nr(info);
-  printk(KERN_INFO "Current Task's pid: %d\n", pid);
+
+  // get the target's pid
+  pid_t tpid = task_pid_nr(info);
+  printk(KERN_INFO "Target PID: %i\n", (int)tpid);
 
   // get children
-  
+  list_for_each(list, &response->children)
+  {
+    task = list_entry(list, struct task_struct, sibling);
+    printk(KERN_INFO "Child PID: %i\n", task->pid);
+  }
+
+  // get siblings
+  // get ancestors
 
 
   return 1;
@@ -102,12 +113,12 @@ static int __init interceptor_start(void) {
   }
   
   /* Store a copy of all the existing functions */
-  ref_sys_cs3013_syscall1 = (void *)sys_call_table[__NR_cs3013_syscall1];
+  ref_sys_cs3013_syscall2 = (void *)sys_call_table[__NR_cs3013_syscall2];
 
   /* Replace the existing system calls */
   disable_page_protection();
 
-  sys_call_table[__NR_cs3013_syscall1] = (unsigned long *)new_sys_cs3013_syscall1;
+  sys_call_table[__NR_cs3013_syscall2] = (unsigned long *)new_sys_cs3013_syscall2;
   
   enable_page_protection();
   
@@ -124,7 +135,7 @@ static void __exit interceptor_end(void) {
   
   /* Revert all system calls to what they were before we began. */
   disable_page_protection();
-  sys_call_table[__NR_cs3013_syscall1] = (unsigned long *)ref_sys_cs3013_syscall1;
+  sys_call_table[__NR_cs3013_syscall2] = (unsigned long *)ref_sys_cs3013_syscall2;
   enable_page_protection();
 
   printk(KERN_INFO "Unloaded interceptor!");

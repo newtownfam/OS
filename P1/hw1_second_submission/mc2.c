@@ -82,14 +82,6 @@ int parentProcess(struct processes bgProcesses[], int bgPending, int bgRunning, 
 
 }
 
-/* Child process function
- * Exec to become the wanted function */
-void childProcess(char * option, char ** args)
-{
-	int rc = execvp(option, args); // system function to execute the three commands
-	assert(rc==0);
-}
-
 /* updateBg will update the background process data structure */
 void updateBG(struct processes bgProcesses[], int bgRunning)
 {
@@ -184,6 +176,25 @@ int main(int argc, char ** argv)
 		}
 		userInput[strlen(userInput)-1] = '\0';
 		printf("User input: %s\n", userInput);
+		
+		int t = 0;
+
+		if((strcmp(userInput,"0")) && (strcmp(userInput,"1")) && (strcmp(userInput,"2")) && (strcmp(userInput,"3")) && (strcmp(userInput,"4")) && (strcmp(userInput,"5")) && (strcmp(userInput,"a")) && (strcmp(userInput,"c")) && (strcmp(userInput,"p")) && (strcmp(userInput, "r")))
+		{
+			for(int n=3; n<k; n++)
+			{
+				if(strcmp(userInput, commands[n].name))
+				{
+					t = 1;
+				}
+
+			}
+			if(t!=1)
+			{
+				printf("Invalid Input.\n");
+				continue;
+			}
+		}
 
 		/* Check for exit condition */
 		if(userInput[0] == 'e')

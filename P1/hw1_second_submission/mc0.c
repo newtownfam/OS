@@ -137,7 +137,7 @@ int main(int argc, char ** argv)
 
 	
 	/* Initial startup title */
-	printf("\n ==== Mid-Day Commander, v2 ====\n");
+	printf("\n ==== Mid-Day Commander, v0 ====\n");
 
 	/* loop until exit is called*/
 	while(1)
@@ -169,11 +169,11 @@ int main(int argc, char ** argv)
 		}
 
 		/* prints out a, c, e, and p commands */
-		printf("\ta. add command : adds a new command to the menu\n");
-		printf("\tc. change directory : Changes process working directory\n"); // done: needs testing
-		printf("\te. exit : exit midday Commander\n"); // working: exits terminal
-		printf("\tp. pwd : Prints working directory\n");
-		printf("\tr. prints running background processes\n");
+		//printf("\ta. add command : adds a new command to the menu\n");
+		//printf("\tc. change directory : Changes process working directory\n"); // done: needs testing
+		//printf("\te. exit : exit midday Commander\n"); // working: exits terminal
+		//printf("\tp. pwd : Prints working directory\n");
+		//printf("\tr. prints running background processes\n");
 		printf("Option? (control C to exit): ");
 
 		/* take input */
@@ -186,7 +186,7 @@ int main(int argc, char ** argv)
 		printf("User input: %s\n", userInput);
 
 		/* code to keep this as file as mc0 */
-		if(userInput[0] != '0' && userInput[0] != '1' && userInput[0] != '2')
+		if((strcmp(userInput,"0")) && (strcmp(userInput,"1")) && (strcmp(userInput,"2")))
 		{
 			printf("Invalid Argument\n");
 			continue;

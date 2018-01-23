@@ -137,7 +137,7 @@ int main(int argc, char ** argv)
 
 	
 	/* Initial startup title */
-	printf("\n ==== Mid-Day Commander, v2 ====\n");
+	printf("\n ==== Mid-Day Commander, v1 ====\n");
 
 	/* loop until exit is called*/
 	while(1)
@@ -173,7 +173,7 @@ int main(int argc, char ** argv)
 		printf("\tc. change directory : Changes process working directory\n"); // done: needs testing
 		printf("\te. exit : exit midday Commander\n"); // working: exits terminal
 		printf("\tp. pwd : Prints working directory\n");
-		printf("\tr. prints running background processes\n");
+		//printf("\tr. prints running background processes\n");
 		printf("Option? (control C to exit): ");
 
 		/* take input */
@@ -185,11 +185,22 @@ int main(int argc, char ** argv)
 		userInput[strlen(userInput)-1] = '\0';
 		printf("User input: %s\n", userInput);
 
-
-		if(userInput[0] == 'r')
+		int t = 0;
+		if((strcmp(userInput,"0")) && (strcmp(userInput,"1")) && (strcmp(userInput,"2")) && (strcmp(userInput,"3")) && (strcmp(userInput,"4")) && (strcmp(userInput,"5")) && (strcmp(userInput,"a")) && (strcmp(userInput,"c")) && (strcmp(userInput,"p")) && (strcmp(userInput, "r")))
 		{
-			printf("Invalid Argument\n");
-			continue;
+			for(int n=3; n<k; n++)
+			{
+				if(strcmp(userInput, commands[n].name))
+				{
+					t = 1;
+				}
+
+			}
+			if(t!=1)
+			{
+				printf("Invalid Input.\n");
+				continue;
+			}
 		}
 		/* Check for exit condition */
 		if(userInput[0] == 'e')
