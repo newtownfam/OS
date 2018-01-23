@@ -183,7 +183,7 @@ int main(int argc, char ** argv)
 			break;
 		}
 		userInput[strlen(userInput)-1] = '\0';
-		printf("User input: %s\n", userInput);
+		//printf("User input: %s\n", userInput);
 
 		/* code to keep this as file as mc0 */
 		if((strcmp(userInput,"0")) && (strcmp(userInput,"1")) && (strcmp(userInput,"2")))

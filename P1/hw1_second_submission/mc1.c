@@ -183,7 +183,7 @@ int main(int argc, char ** argv)
 			break;
 		}
 		userInput[strlen(userInput)-1] = '\0';
-		printf("User input: %s\n", userInput);
+		//printf("User input: %s\n", userInput);
 
 		int t = 0;
 		if((strcmp(userInput,"0")) && (strcmp(userInput,"1")) && (strcmp(userInput,"2")) && (strcmp(userInput,"3")) && (strcmp(userInput,"4")) && (strcmp(userInput,"5")) && (strcmp(userInput,"a")) && (strcmp(userInput,"c")) && (strcmp(userInput,"p")) && (strcmp(userInput, "r")))

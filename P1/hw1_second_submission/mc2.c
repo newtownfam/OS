@@ -175,7 +175,7 @@ int main(int argc, char ** argv)
 			break;
 		}
 		userInput[strlen(userInput)-1] = '\0';
-		printf("User input: %s\n", userInput);
+		//printf("User input: %s\n", userInput);
 		
 		int t = 0;
 
