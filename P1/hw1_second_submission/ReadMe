@@ -1,0 +1,105 @@
+Andrew Morrison
+Peter Christakos
+
+Project 1 V2 -- Finished --
+ReadMe
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Files:
+ - Makefile
+ - mc0: Phase 1
+ - mc1: Phase 2
+ - mc2: Phase 3
+ - Test Cases: folder containing all test cases
+
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Program goal:
+
+ Our goal is to implement a terminal that can run commands.
+ More specifically, commands can be default or added by the user. The user can also specify arguments for their commands. In addition, the terminal should be able to handle background processes that are indicated by a '&'. When a background process is started it will be kept track of and will print statistics as well as the PID when finished. It will not interrupt user input.
+
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Function & Struct information: 
+
+struct info
+struct info holds the name and number of user commands
+
+struct processes
+Struct processes holds information about a running process
+
+parentProcess
+Parent process function
+keeps track of time and waits on the child process
+prints out the statistics
+
+updateBG
+updateBg will update the background process data structure
+
+main
+main
+
+Important data structures:
+commands - holds info for user added commands
+bgProcesses - keeps track of background processes
+
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ How it works:
+
+ Firstly, necessary variables are created and allocated if necessary. 
+
+ Next, the startup title is printed.
+
+ A while loop (while(1)) is started that will allow the program to continuously run.
+
+ User input is asked for, any user-added commands are printed, and user input is taken using fgets()
+ - scanf() was used at first but caused extreme difficulty
+
+ If the user input is 2 then it is handled immediately because it is the only command that requires arguments
+
+ Then, a switch case is entered that will handle all possible commands seperately. If it is a user added command then the default case takes care of it.
+
+ If the command is 'a' then commands is updated so the user command is essentially added. Any arguments for the command are also handled immediately. If one of the arguments is an '&', then bgProcesses is notified so that it can be handled as a background process.
+
+ ~~~Now for the difficult part... handling the processes and background processes~~~
+First we fork
+
+The parent:
+	will handle the process if it is not in the background
+	if it is a background process, then the parent will simply update bgProcesses with the correct pid and command #
+
+The child:
+	Background:
+		fork again
+			grandchild 1:
+				execvp() to perform the process
+			grandchild 2:
+				call parentProcess() to wait for the other child to finish and exit() when done so that there are not more than 1 process taking input at once
+	Not background:
+		execvp() to perform the process
+
+finally, use updateBG to update bgProcesses in case any background processes have finished. This function will also be called whenever the user presses 'r'
+
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Difficulties:
+
+ do not use scanf()
+ knowing when a child finishes and updating bgProcesses accordingly
+ make sure you KILL YOUR CHILDREN.. many strange things happen when more than one process is looping at once
+ #RTFM
+
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Errors:
+
+None that we know of.
+
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
