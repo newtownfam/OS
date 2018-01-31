@@ -1,4 +1,5 @@
-/* Andrew Morrison
+/* ki2.c
+ * Andrew Morrison
  * Peter Christakos */
 
 #include <linux/kernel.h>
