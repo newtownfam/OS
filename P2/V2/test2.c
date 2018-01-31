@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <linux/kernel.h>
 
-#define __NR_cs3013_syscall2 378
+#define __NR_cs3013_syscall2 334
 
 /* Ancestry struct */
 struct ancestry
@@ -94,14 +94,14 @@ int main()
 
 	int pid1, pid2, pid3, pid4;
 	/* Create our family tree */
-	struct ancestry tree;
+	struct ancestry* tree = malloc(sizeof(struct ancestry));
 	procAncestry(pid1, pid2, pid3, pid4);
 	pid_t pidArray[5] = {pid1, pid2, pid3, pid4};
 
 	for(int i = 0; i<4; i++)
 	{
 		/* call the system call */
-		long ret = (long)syscall(__NR_cs3013_syscall2, pidArray[i], &tree);
+		long ret = (long)syscall(__NR_cs3013_syscall2, &pidArray[i], &tree);
 		if(!ret)
 		{
 			int j = 0;
@@ -112,19 +112,19 @@ int main()
 			printf("\t~~PRINTING CHILDREN~~\n");
 			for(j = 0; j<99; j++)
 			{
-				printf("[%i] PID: %d\n", (i+1), tree.children[j]);
+				printf("[%i] PID: %d\n", (i+1), tree->children[j]);
 			}
 
 			printf("\t~~PRINTING SIBLINGS~~\n");
 			for(j = 0; j<99; j++)
 			{
-				printf("[%i] PID: %d\n", (i+1), tree.siblings[j]);
+				printf("[%i] PID: %d\n", (i+1), tree->siblings[j]);
 			}
 
 			printf("\t~~PRINTING ANCESTORS~~\n");
 			for(j = 0; j<99; j++)
 			{
-				printf("[%i] PID: %d\n", (i+1), tree.ancestors[j]);
+				printf("[%i] PID: %d\n", (i+1), tree->ancestors[j]);
 			}
 
 		}

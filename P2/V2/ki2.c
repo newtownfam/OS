@@ -60,7 +60,7 @@ asmlinkage long new_sys_cs3013_syscall2(unsigned short * target_pid, struct ance
 
   // get siblings
   i = 0;
-  list_for_each(list, &tree->sibling)
+  list_for_each(list, &tree->real_parent->children)
   {
   	task = list_entry(list, struct task_struct, sibling);
   	printk(KERN_INFO "Sibling PID: %d\n", task->pid);
@@ -73,9 +73,12 @@ asmlinkage long new_sys_cs3013_syscall2(unsigned short * target_pid, struct ance
   while(task->pid > 1)
   {
   	task = task->real_parent;
-  	printk(KERN_INFO "Parent PID: %d\n", task->pid);
-  	info.ancestors[i] = task->pid;
-  	i++;
+    if (task->pid != tpid) 
+    {
+  	 printk(KERN_INFO "Parent PID: %d\n", task->pid);
+  	 info.ancestors[i] = task->pid;
+  	 i++;
+    }
   }
 
   /* Check if copy back to user succeeds */
