@@ -17,11 +17,10 @@ struct ancestry
 	pid_t children[100];
 	pid_t siblings[100];
 	pid_t ancestors[10];
-}
+};
 
-void procAncestry()
+void procAncestry(int pid1, int pid2, int pid3, int pid4)
 {
-	int pid1, pid2, pid3, pid4;
 
 	if((pid1 = fork())>=0)
 	{
@@ -59,7 +58,7 @@ void procAncestry()
 			else // failure
 			{
 				perror("~~~FATAL~~~\nFork Failed: \n");
-				return 0;
+				exit(1);
 			}
 		}
 		else // parent1
@@ -92,15 +91,18 @@ void procAncestry()
 
 int main()
 {
+
+	int pid1, pid2, pid3, pid4;
 	/* Create our family tree */
-	struct ancestry * tree = malloc(sizeof(struct ancestry));
-	procAncestry();
+	struct ancestry tree;
+	procAncestry(pid1, pid2, pid3, pid4);
 	pid_t pidArray[5] = {pid1, pid2, pid3, pid4};
 
 	for(int i = 0; i<4; i++)
 	{
 		/* call the system call */
-		if(!(Long ret = (long)syscall(__NR_cs3013_syscall2, pidArray[i], &tree)))
+		long ret = (long)syscall(__NR_cs3013_syscall2, pidArray[i], &tree);
+		if(!ret)
 		{
 			int j = 0;
 			printf("\t~~~~~~~~KERNEL INTERCEPTOR TEST PROGRAM~~~~~~~~\n");
