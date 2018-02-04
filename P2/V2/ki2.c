@@ -39,7 +39,7 @@ asmlinkage long new_sys_cs3013_syscall2(unsigned short * target_pid, struct ance
   task = pid_task(find_vpid(*target_pid), PIDTYPE_PID);
 
   /* Check if copy from user succeeds */
-  if(copy_from_user(&tree, response, sizeof(response)))
+  if(copy_from_user(&info, response, sizeof(info)))
   {
     return EFAULT;
   }
@@ -62,10 +62,13 @@ asmlinkage long new_sys_cs3013_syscall2(unsigned short * target_pid, struct ance
   i = 0;
   list_for_each(list, &tree->real_parent->children)
   {
-  	task = list_entry(list, struct task_struct, sibling);
-  	printk(KERN_INFO "Sibling PID: %d\n", task->pid);
-  	info.siblings[i] = task->pid;
-  	i++;
+    task = list_entry(list, struct task_struct, sibling);
+    if(task->pid != tpid)
+    {
+  	   printk(KERN_INFO "Sibling PID: %i\n", task->pid);
+  	   info.siblings[i] = task->pid;
+  	   i++;
+    }
   }
 
   // get ancestors
@@ -75,14 +78,14 @@ asmlinkage long new_sys_cs3013_syscall2(unsigned short * target_pid, struct ance
   	task = task->real_parent;
     if (task->pid != tpid) 
     {
-  	 printk(KERN_INFO "Parent PID: %d\n", task->pid);
+  	 printk(KERN_INFO "Ancestor PID: %i\n", task->pid);
   	 info.ancestors[i] = task->pid;
   	 i++;
     }
   }
 
   /* Check if copy back to user succeeds */
-  if(copy_to_user(response, &tree, sizeof(response)))
+  if(copy_to_user(response, &info, sizeof(info)))
   {
   	return EFAULT;
   }

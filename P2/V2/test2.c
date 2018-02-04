@@ -8,8 +8,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <linux/kernel.h>
-
-#define __NR_cs3013_syscall2 334
+//334
+#define __NR_cs3013_syscall2 378
 
 /* Ancestry struct */
 struct ancestry
@@ -21,110 +21,95 @@ struct ancestry
 
 void procAncestry(int pid1, int pid2, int pid3, int pid4)
 {
-
-	if((pid1 = fork())>=0)
-	{
-		if(pid1==0) // child1
-		{
-			if((pid2 = fork())>=0)
-			{
-				if(pid2==0) // child2
-				{
-					sleep(5);
-					exit(0);
-				}
-				else // parent2
-				{
-					if((pid3 = fork())>=0)
-					{
-						if(fork == 0) // child 3
-						{
-							sleep(5);
-							exit(0);
-						}
-						else // parent 3
-						{
-							sleep(5);
-							exit(0);
-						}
-					}
-					else // failure
-					{
-						perror("~~~FATAL~~~\nFork Failed: \n");
-						exit(1);
-					}
-				}
-			}
-			else // failure
-			{
-				perror("~~~FATAL~~~\nFork Failed: \n");
-				exit(1);
-			}
-		}
-		else // parent1
-		{
-			if((pid4 = fork())>=0)
-			{
-				if(pid4==0) // child 4
-				{
-					sleep(5);
-					exit(0);
-				}
-				else // parent 4
-				{
-					// continue
-				}
-			}
-			else // failure
-			{
-				perror("~~~FATAL~~~\nFork Failed: \n");
-				exit(1);
-			}
-		}
-	}
-	else // failure
+	// returns 0 to child
+	if((pid1 = fork())<0)
 	{
 		perror("~~~FATAL~~~\nFork Failed: \n");
 		exit(1);
 	}
+	else if(pid1==0) // child1
+	{
+		sleep(5);
+		exit(0);
+	}
+	else //parent
+	{
+		if((pid2 = fork()) < 0)
+		{
+			perror("~~~FATAL~~~\nFork Failed: \n");
+			exit(1);
+		}
+		else if(pid2==0) // child2
+		{
+			sleep(5);
+			exit(0);
+		}
+		else
+		{
+			if((pid3 = fork()) < 0)
+			{
+				perror("~~~FATAL~~~\nFork Failed: \n");
+				exit(1);
+			}
+			else if(pid3 == 0) // child 3
+			{
+				sleep(5);
+				exit(0);
+			}
+			else // parent 3
+			{
+				if ((pid4 = fork()) < 0)
+				{
+					perror("~~~FATAL~~~\nFork Failed: \n");
+					exit(1);
+				}
+				else if (pid4 == 0) // failure
+				{
+					sleep(5);
+					exit(0);
+				}
+			}
+		}
+	}
 }
+		
 
 int main()
 {
 
 	int pid1, pid2, pid3, pid4;
 	/* Create our family tree */
-	struct ancestry* tree = malloc(sizeof(struct ancestry));
+	struct ancestry* tree = malloc(sizeof (tree));
 	procAncestry(pid1, pid2, pid3, pid4);
 	pid_t pidArray[5] = {pid1, pid2, pid3, pid4};
 
 	for(int i = 0; i<4; i++)
 	{
 		/* call the system call */
-		long ret = (long)syscall(__NR_cs3013_syscall2, &pidArray[i], &tree);
-		if(!ret)
+		long ret = (long)syscall(__NR_cs3013_syscall2, &pidArray[i], *tree);
+		if(ret)
 		{
 			int j = 0;
-			printf("\t~~~~~~~~KERNEL INTERCEPTOR TEST PROGRAM~~~~~~~~\n");
-			printf("Target pid: %d\n\n", pid3);
+			printf("\t~~~~~~~~KERNEL INTERCEPTOR TEST %d PROGRAM~~~~~~~~\n", (i+1));
+			printf("Target pid: %d\n", pidArray[i]);
 			printf("Test #: %d\n", (i+1));
 
-			printf("\t~~PRINTING CHILDREN~~\n");
-			for(j = 0; j<99; j++)
+			printf("\t~~~PRINTING CHILDREN - Test %d~~~\n", (i+1));
+			for(j = 0; j<100; j++)
 			{
-				printf("[%i] PID: %d\n", (i+1), tree->children[j]);
+				printf("[%i] Child PID: %d\n", j+1, tree->children[j]);
 			}
 
-			printf("\t~~PRINTING SIBLINGS~~\n");
-			for(j = 0; j<99; j++)
+			printf("\t~~~PRINTING SIBLINGS - Test %d~~~\n", (i+1));
+			for(j = 0; j<100; j++)
 			{
-				printf("[%i] PID: %d\n", (i+1), tree->siblings[j]);
+				printf("[%i] Sibling PID: %d\n", j+1, tree->siblings[j]);
 			}
 
-			printf("\t~~PRINTING ANCESTORS~~\n");
-			for(j = 0; j<99; j++)
+			printf("\t~~~PRINTING ANCESTORS - Test %d~~~\n", (i+1));
+			for(j = 0; j<10; j++)
 			{
-				printf("[%i] PID: %d\n", (i+1), tree->ancestors[j]);
+				printf("[%i] Ancestor PID: %d\n", j+1, tree->ancestors[j]);
 			}
 
 		}
