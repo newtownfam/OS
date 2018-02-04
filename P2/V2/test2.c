@@ -19,54 +19,68 @@ struct ancestry
 	pid_t ancestors[10];
 };
 
-void procAncestry(int pid1, int pid2, int pid3, int pid4)
+void procAncestry(int *pid1, int *pid2, int *pid3, int *pid4)
 {
 	// returns 0 to child
-	if((pid1 = fork())<0)
+	int rc1, rc2, rc3, rc4;
+	if((rc1 = fork())<0)
 	{
 		perror("~~~FATAL~~~\nFork Failed: \n");
 		exit(1);
 	}
-	else if(pid1==0) // child1
+	else if(rc1==0) // child1
 	{
+		*pid1 = getpid();
+		printf("%d\n", *pid1);
 		sleep(5);
 		exit(0);
 	}
 	else //parent
 	{
-		if((pid2 = fork()) < 0)
+		if((rc2 = fork()) < 0)
 		{
 			perror("~~~FATAL~~~\nFork Failed: \n");
 			exit(1);
 		}
-		else if(pid2==0) // child2
+		else if(rc2==0) // child2
 		{
+			*pid2 = getpid();
+			printf("%d\n", *pid2);
 			sleep(5);
 			exit(0);
 		}
 		else
 		{
-			if((pid3 = fork()) < 0)
+			if((rc3 = fork()) < 0)
 			{
 				perror("~~~FATAL~~~\nFork Failed: \n");
 				exit(1);
 			}
-			else if(pid3 == 0) // child 3
-			{
+			else if(rc3 == 0) // child 3
+			{	
+				*pid3 = getpid();
+				printf("%d\n", *pid3);
 				sleep(5);
 				exit(0);
 			}
 			else // parent 3
 			{
-				if ((pid4 = fork()) < 0)
+				if ((rc4 = fork()) < 0)
 				{
 					perror("~~~FATAL~~~\nFork Failed: \n");
 					exit(1);
 				}
-				else if (pid4 == 0) // failure
+				else if (rc4 == 0) // child 4
 				{
+					*pid4 = getpid();
+					printf("%d\n", *pid4);
 					sleep(5);
 					exit(0);
+				}
+				else // parent 4
+				{
+					sleep(5);
+					exit(5);
 				}
 			}
 		}
@@ -79,14 +93,16 @@ int main()
 
 	int pid1, pid2, pid3, pid4;
 	/* Create our family tree */
-	struct ancestry* tree = malloc(sizeof (tree));
-	procAncestry(pid1, pid2, pid3, pid4);
+	struct ancestry tree;// = malloc(sizeof (tree));
+	procAncestry(&pid1, &pid2, &pid3, &pid4);
 	pid_t pidArray[5] = {pid1, pid2, pid3, pid4};
 
 	for(int i = 0; i<4; i++)
 	{
 		/* call the system call */
-		long ret = (long)syscall(__NR_cs3013_syscall2, &pidArray[i], *tree);
+		printf("hello\n");
+		printf("Hello %d\n", pidArray[i]);
+		long ret = (long)syscall(__NR_cs3013_syscall2, pidArray[i], &tree);
 		if(ret)
 		{
 			int j = 0;
@@ -97,19 +113,19 @@ int main()
 			printf("\t~~~PRINTING CHILDREN - Test %d~~~\n", (i+1));
 			for(j = 0; j<100; j++)
 			{
-				printf("[%i] Child PID: %d\n", j+1, tree->children[j]);
+				printf("[%i] Child PID: %d\n", j+1, tree.children[j]);
 			}
 
 			printf("\t~~~PRINTING SIBLINGS - Test %d~~~\n", (i+1));
 			for(j = 0; j<100; j++)
 			{
-				printf("[%i] Sibling PID: %d\n", j+1, tree->siblings[j]);
+				printf("[%i] Sibling PID: %d\n", j+1, tree.siblings[j]);
 			}
 
 			printf("\t~~~PRINTING ANCESTORS - Test %d~~~\n", (i+1));
 			for(j = 0; j<10; j++)
 			{
-				printf("[%i] Ancestor PID: %d\n", j+1, tree->ancestors[j]);
+				printf("[%i] Ancestor PID: %d\n", j+1, tree.ancestors[j]);
 			}
 
 		}

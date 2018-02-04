@@ -6,7 +6,8 @@ all:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
 	gcc test2.c -o test2
 	gcc stove.c -o stove
-	gcc	coache.c -o coache	
+	gcc	coache.c -o coache
+	gcc winters.c -o winters
 
 
 clean:

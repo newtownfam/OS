@@ -24,19 +24,19 @@ struct ancestry
 /************************* Our Code *****************************************/
 
 asmlinkage long new_sys_cs3013_syscall2(unsigned short * target_pid, struct ancestry *response)
-{ 
+{
 
   struct task_struct * tree;
   struct task_struct * task;
   struct list_head * list;
   struct ancestry info;
-  pid_t tpid;
+  struct pid *tpid;
   int i = 0;
-
+  
   /* Gets the current task
    * Use task->comm for task name and task->pid for the task PID */
-  //struct task_struct *task = current;
-  task = pid_task(find_vpid(*target_pid), PIDTYPE_PID);
+  //struct task_struct *task = currentask = pid_task(find_vpid(*target_pid), PIDTYPE_PID);
+  printk(KERN_INFO "Target PID: %d\n", *target_pid);
 
   /* Check if copy from user succeeds */
   if(copy_from_user(&info, response, sizeof(info)))
@@ -45,17 +45,25 @@ asmlinkage long new_sys_cs3013_syscall2(unsigned short * target_pid, struct ance
   }
 
   // print the target's pid
-  tpid = task_pid_nr(tree);
-  printk(KERN_INFO "Target PID: %i\n", tpid);
+  printk(KERN_INFO "Before TPID\n");
+  tpid = find_vpid(*target_pid);
+  if(tpid == NULL)
+  {
+    return 1;
+  }
+  tree = pid_task(tpid, PIDTYPE_PID);
+  
 
   // get children
   i = 0;
   list_for_each(list, &tree->children)
   {
     task = list_entry(list, struct task_struct, sibling);
-    printk(KERN_INFO "Child PID: %d\n", task->pid);
-    info.children[i] = task->pid;
-    i++;
+    if(task != NULL){//} && task->pid != *target_pid && task->pid > 0){
+      printk(KERN_INFO "Child PID: %d\n", task->pid);
+      info.children[i] = task->pid;
+      i++;
+    }
   }
 
   // get siblings
@@ -63,7 +71,7 @@ asmlinkage long new_sys_cs3013_syscall2(unsigned short * target_pid, struct ance
   list_for_each(list, &tree->real_parent->children)
   {
     task = list_entry(list, struct task_struct, sibling);
-    if(task->pid != tpid)
+    if(task != NULL && task->pid != *target_pid && task->pid > 0)
     {
   	   printk(KERN_INFO "Sibling PID: %i\n", task->pid);
   	   info.siblings[i] = task->pid;
@@ -76,7 +84,7 @@ asmlinkage long new_sys_cs3013_syscall2(unsigned short * target_pid, struct ance
   while(task->pid > 1)
   {
   	task = task->real_parent;
-    if (task->pid != tpid) 
+    if (task != NULL && task->pid != *target_pid && task->pid >0) 
     {
   	 printk(KERN_INFO "Ancestor PID: %i\n", task->pid);
   	 info.ancestors[i] = task->pid;
@@ -159,7 +167,7 @@ static int __init interceptor_start(void) {
   enable_page_protection();
   
   /* And indicate the load was successful */
-  printk(KERN_INFO "Loaded interceptor!");
+  printk(KERN_INFO "Loaded interceptor!\n");
 
   return 0;
 }
@@ -174,7 +182,7 @@ static void __exit interceptor_end(void) {
   sys_call_table[__NR_cs3013_syscall2] = (unsigned long *)ref_sys_cs3013_syscall2;
   enable_page_protection();
 
-  printk(KERN_INFO "Unloaded interceptor!");
+  printk(KERN_INFO "Unloaded interceptor!\n");
 }
 
 MODULE_LICENSE("GPL");
