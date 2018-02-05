@@ -1,0 +1,18 @@
+ReadMe - Project2
+Andrew Morrison
+Peter Christakos
+
+~~~LKM~~~
+How it works:
+The Loadable Kernel Module intercepts the system call, then uses the current process ID to iterate through the process' children, siblings, and ancestors. It fills an ancestry struct with all the IDs.
+
+Issues:
+We struggled with segmentation faults that occured in the LKM mostly because of stupid mistakes that were hard to debug. Finding out how the different kernel functions worked was also somewhat difficult. 
+
+~~~procAncestry~~~
+How it works:
+The procAncestry executable takes user input for the current process ID and prints out all its children, siblings, and ancestors.
+
+~~~test2~~~
+How it works:
+The test2 executable forks three times and then prints out the children, siblings, and ancestors.
