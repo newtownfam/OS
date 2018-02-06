@@ -1,1 +1,0 @@
-cmd_/home/cshue/Documents/OS/P2/V2/ki2.ko := ld -r -m elf_i386 -T ./scripts/module-common.lds --build-id  -o /home/cshue/Documents/OS/P2/V2/ki2.ko /home/cshue/Documents/OS/P2/V2/ki2.o /home/cshue/Documents/OS/P2/V2/ki2.mod.o

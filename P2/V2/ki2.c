@@ -12,7 +12,6 @@
 #include <asm/errno.h>
 
 unsigned long **sys_call_table;
-asmlinkage long (*ref_sys_cs3013_syscall2)(void);
 
 struct ancestry 
 {
@@ -21,22 +20,22 @@ struct ancestry
   pid_t children[100];
 };
 
+asmlinkage long (*ref_sys_cs3013_syscall2)(unsigned short *target_pid, struct ancestry *response);
+
+
 /************************* Our Code *****************************************/
 
 asmlinkage long new_sys_cs3013_syscall2(unsigned short * target_pid, struct ancestry *response)
-{ 
+{
 
-  struct task_struct * tree;
-  struct task_struct * task;
+  struct task_struct * tree; //curtask
+  struct task_struct * task; // temptask
   struct list_head * list;
-  struct ancestry info;
+  struct ancestry info; //family
   pid_t tpid;
   int i = 0;
-
-  /* Gets the current task
-   * Use task->comm for task name and task->pid for the task PID */
-  //struct task_struct *task = current;
-  task = pid_task(find_vpid(*target_pid), PIDTYPE_PID);
+  int j = 0;
+  int k = 0;
 
   /* Check if copy from user succeeds */
   if(copy_from_user(&info, response, sizeof(info)))
@@ -45,55 +44,71 @@ asmlinkage long new_sys_cs3013_syscall2(unsigned short * target_pid, struct ance
   }
 
   // print the target's pid
+  /* Gets the current task
+   * Use task->comm for task name and task->pid for the task PID */
+  //struct task_struct *task = currentask = pid_task(find_vpid(*target_pid), PIDTYPE_PID);
+  tree = pid_task(find_vpid(*target_pid), PIDTYPE_PID);
   tpid = task_pid_nr(tree);
-  printk(KERN_INFO "Target PID: %i\n", tpid);
+  printk(KERN_INFO "Target PID: %d\n", (int)tpid);
+  
+  /*
+  if(tpid == NULL)
+  {
+    return 1;
+  }
+  tree = pid_task(tpid, PIDTYPE_PID);
+  */
 
   // get children
   i = 0;
   list_for_each(list, &tree->children)
   {
     task = list_entry(list, struct task_struct, sibling);
-    printk(KERN_INFO "Child PID: %d\n", task->pid);
     info.children[i] = task->pid;
+    printk(KERN_INFO "Child PID: %d\n", (int)info.children[i]);
     i++;
   }
 
   // get siblings
-  i = 0;
+  j = 0;
   list_for_each(list, &tree->real_parent->children)
   {
     task = list_entry(list, struct task_struct, sibling);
     if(task->pid != tpid)
     {
-  	   printk(KERN_INFO "Sibling PID: %i\n", task->pid);
-  	   info.siblings[i] = task->pid;
-  	   i++;
+       info.siblings[j] = task->pid;
+       printk(KERN_INFO "Sibling PID: %i\n", (int)info.siblings[j]);
+       j++;
     }
   }
 
   // get ancestors
-  i = 0;
-  while(task->pid > 1)
+  k = 0;
+  task = tree;
+  while(1)
   {
-  	task = task->real_parent;
-    if (task->pid != tpid) 
+    task = task->real_parent;
+    if (task->pid < 1) 
     {
-  	 printk(KERN_INFO "Ancestor PID: %i\n", task->pid);
-  	 info.ancestors[i] = task->pid;
-  	 i++;
+      break;
+    }
+    else
+    {
+     info.ancestors[k] = task->pid;
+     printk(KERN_INFO "Ancestor PID: %i\n", info.ancestors[k]);
+     k++;
     }
   }
 
   /* Check if copy back to user succeeds */
   if(copy_to_user(response, &info, sizeof(info)))
   {
-  	return EFAULT;
+    return EFAULT;
   }
 
-  return 1;
+  return 0;
 }
-
-/************************* Supplied Code *****************************************/
+// GIVEN CODE
 
 static unsigned long **find_sys_call_table(void) {
   unsigned long int offset = PAGE_OFFSET;
@@ -104,7 +119,7 @@ static unsigned long **find_sys_call_table(void) {
 
     if (sct[__NR_close] == (unsigned long *) sys_close) {
       printk(KERN_INFO "Interceptor: Found syscall table at address: 0x%02lX",
-	     (unsigned long) sct);
+       (unsigned long) sct);
       return sct;
     }
     
