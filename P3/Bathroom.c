@@ -6,6 +6,10 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <math.h>
+#include <sys/types.h>
 
 /* enter
  * g is the gender of the thread
@@ -15,6 +19,9 @@
  * if g != brGlobal, return 0
  * if gender is invalid, return -1
  */
+
+
+
 int enter(struct br* brGlobal, int g) // needs lockageeeeee
 {
 	if(brGlobal->gender == -1) // check if the bathroom is vacant, if so enter
@@ -91,16 +98,23 @@ void leave(struct br* brGlobal) // needs lockaging
 /* Initializes the threads
  * Initialize the bathroom object
  */
-void initialize()
+void initialize(struct br* brGlobal)
 {
-
+  brGlobal = (struct br *)malloc(sizeof(struct br));
+	brGlobal->gender = -1;
+	brGlobal->mCount = 0;
+	brGlobal->fCount = 0;
+	brGlobal->totalUsages = 0;
+	brGlobal->vacantTime = 0;
+	brGlobal->occupiedTime = 0;
+  
 }
 
 /* Prints out all statistics and exits
  */
-void finalize()
+void finalize(struct br* brGlobal)
 {
-
+	printf("\nTotal Usages: %d\nVacant Time: %l\nOccupied Time: %l\n", brGlobal->totalUsages, brGlobal->vacantTime, brGlobal->occupiedTime);
 }
 /* Prints out statistics for each individiaul thread before it exits
  * Will print:
@@ -108,7 +122,8 @@ void finalize()
  *	its gender and number of loops
  *	the min, average, and max time spent waiting in the queue
  */
-void printStats()
+void printStats(pthread_mutex_t printLock, int gender, int threadNum, int lCount, long minTime, long aveTime, long maxTime)
 {
-
+	printf("~~~THREAD [%d] STATISTICS~~~\n", threadNum);
+  printf("Gender: %");
 }

@@ -1,15 +1,27 @@
+# Project 3 Makefile
+# Peter Christakos
+# Andrew Morrison
 CC = gcc
 CFLAGS = -Wall
 OBJS = Bathroom.o brTest.o
+OBJS2 = Bathroom.o bathSim.o
 
-all: $(OBJS)
-    $(CC) $(CFLAGS) $(OBJS) -o sysstatd
+all: brTest bathSim  # makes two exe, tester and sim
 
-server.o: server.c
-    $(CC) $(CFLAGS) -c server.c
+brTest: $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o brTest
 
-rio.o: rio.c rio.h
-    $(CC) $(CFLAGS) -c rio.c
+brTest.o: brTest.c
+	$(CC) $(CFLAGS) -c brTest.c
+
+bathSim: $(OBJS2)
+	$(CC) $(CFAGS) $(OBJS2) -o bathSim
+
+bathSim.o: bathSim.c
+	$(CC) $(CFLAGS) -c bathSim.c
+
+Bathroom.o: Bathroom.c Bathroom.h  #used for both exe
+	$(CC) $(CFLAGS) -c Bathroom.c
 
 clean:
-    rm -f *~ *.o sysstatd
+	rm -f *~ *.o brTest bathSim

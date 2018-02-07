@@ -41,6 +41,8 @@ struct br
 	//int avePeople;
 };
 
+enum gender {male = 1, female = 0};
+
 //struct br * brGlobal;
 int enter(struct br* brGlobal, int g);
 void leave(struct br* brGlobal);
