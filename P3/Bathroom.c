@@ -97,12 +97,22 @@ void leave() // needs lockaging
 	}
 }
 
+/* Initializes the threads
+ */
 void initialize()
 {
 
 }
 
+/* Prints out all statistics and exits
+ */
 void finalize()
+{
+
+}
+/* Prints out statistics for each individiaul thread before it exits
+ */
+void printStats()
 {
 
 }
