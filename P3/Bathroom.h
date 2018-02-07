@@ -29,7 +29,8 @@
 #ifndef BATHROOM_SEEN
 #define BATHROOM_SEEN
 
-struct brGlobal();
+struct br();
+struct br * brGlobal;
 int enter(struct brGlobal, int g);
 void leave();
 void initialize();

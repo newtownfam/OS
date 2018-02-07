@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct brGlobal
+struct br
 {
 	int gender; // -1 for vacant, 0 for female, and 1 for male
 	int mCount;
@@ -27,9 +27,9 @@ struct brGlobal
  * if g != brGlobal, return 0
  * if gender is invalid, return -1
  */
-int enter(struct brGlobal, int g) // needs lockageeeeee
+int enter(int g) // needs lockageeeeee
 {
-	if(brGlobal.gender == -1) // check if the bathroom is vacant, if so enter
+	if(brGlobal->gender == -1) // check if the bathroom is vacant, if so enter
 	{
 		brGlobal->gender = g; // set gender flag
 		assert(mCount == 0 && fCount == 0);
@@ -48,7 +48,7 @@ int enter(struct brGlobal, int g) // needs lockageeeeee
 		}
 		return 1; // success
 	}
-	else if(brGlobal.gender == g) // correct gender so enter
+	else if(brGlobal->gender == g) // correct gender so enter
 	{
 		brGlobal->totalUsages++;
 		switch(g)
@@ -78,9 +78,9 @@ int enter(struct brGlobal, int g) // needs lockageeeeee
  *  and check if bathroom is vacant, if so then set the flag to vacant
  * same idea for male
  */
-void leave(struct brGlobal) // needs lockaging
+void leave() // needs lockaging
 {
-	if(brGlobal.gender == 0) // if its a female
+	if(brGlobal->gender == 0) // if its a female
 	{
 		assert(brGlobal->mCount == 0);
 		brGlobal->fCount--; // decrement females
