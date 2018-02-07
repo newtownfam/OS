@@ -1,33 +1,49 @@
 Steps to Implement Project 3
 
-Hints:
+*****************MARC TREVOR AND KATH****************************
+bathroomSim (where we call the functions that we had defined below):
+https://codeshare.io/ar6rW7
 
+Bathroom.h: (header file - can be same)
+https://codeshare.io/GAQ0VN
+
+Bathroom.c: (Creates and Defines all functions, threads, etc…)
+https://codeshare.io/5PzQJM
+
+******************************************************************
+
+******************** PETER AND ANDREW’S STUFF ************************ 
+* bathSim: https://codeshare.io/2WPKYd                               *
+* Bathroom.h: https://codeshare.io/2KwnYX                            *
+* Bathroom.c: https://codeshare.io/GbPY66                            *
+* brTest.c: nah fam                                                  *            
+* Makefile for Testing brTest: https://codeshare.io/GkwPoM           *                  
+**********************************************************************
+
+
+Hints:
 	COMPILE WITH -Wall and -pthread for gcc
 	Mutex lock for managing data structures
 	Semaphore or condition variable for waiting for access to the bathroom
-	pthread_join
+	Pthread_join - in order to cleanly exit
 	assert that at least one of the man/woman counters is 0
-
-
+	Must have over 100 threads
 Files needed:
 	module "bathroom.o" - defines the bathroom
-	interface file "bathroom.h" - must define interface to bathroom; Initialize, Finalize, Enter(), Leave()
+	interface file "bathroom.h" - must define interface to bathroom; Initialize, Finalize, Enter(), 
+Leave()
 	main() - bathroomSim
 	Individual() - set the thread information
 	Enter() and Leave()
-
 Bathroom.h file:
-
 	Enter(gender G) 
 		- check for gender flag
 		- enter if vacant or same gender
 		- increment people in bathroom
 		- wait if not
-
 	Leave(void)
 		- decrement the people in bathroom
 		- set flag to vacant if last person
-
 	Global bathroom object (PROTECT FROM RACE CONDITIONS)
 		- counter for people in bathroom (both men and women)
 		- gender flag or vacant
@@ -39,18 +55,19 @@ Bathroom.h file:
 		- total time occupied
 		- average queue length
 		- Average # of people in the bathroom at the same time
-
 	Initialize(...)
 		- called by master thread only
-
 	Finalize(...)
 		- after all threads have been called
 		- print out statistics gathered by global bathroom object
+
+
 
 bathroomSim - Main() - master thread:
 
 	takes in - bathroomSim nUsers meanLoopCount meanArrival meanStay
 	use Box-Muller transform to create random numvers with a normal distribution
+		-for random numbers use rand(), drand(), as well as seeds
 	
 	Calls Initialize
 	Uses pthread_create to create all threads
@@ -71,11 +88,45 @@ bathroomSim - Main() - master thread:
 				Its own thread number
 				Its gender and number of loops
 				The min average and max time spent in the queue
-
 Problems:
 	How do the threads inform the master they have finished
 	How do user threads and master thread exit cleanly?
 	Protect against threads printing out at the same time
+
+
+Basic Idea of the Project:
+	-Individuals simulated by threads
+	-Individuals wait or proceed based on implemented data structures/synchronization 
+Primitives
+-”sign” on bathroom door
+	*vacant
+	*occupied by women
+	*occupied by men
+-Individual may only enter if vacant or occupied by same sex
+-Otherwise must wait until vacant
+-When the first person of a sex enters they must set the “sign” if previously vacant
+-Waiting people are all of the same sex
+-People who are arriving can “jump the queue” if their sex is using bathroom 
+-When the last person leaves set the “sign” to vacant
+-For arrivals the arrival time, the time they stay in the bathroom, and the loops they take are random
+
+
+Helpful Notes:
+-Getting PThread ID:
+	pthread_self()
+-random numbers
+	https://math.stackexchange.com/questions/1874363/how-to-estimate-the-range-of-a-normal-distribution-when-the-mean-and-standard-de
+
+https://stackoverflow.com/questions/2325472/generate-random-numbers-following-a-normal-distribution-in-c-c
+
+https://math.stackexchange.com/questions/1866544/can-we-calculate-the-range-form-mean-and-standard-deviation-in-a-normal-distribu
+
+Usleep info:
+http://man7.org/linux/man-pages/man3/usleep.3.html
+
+How to use pthread_create:
+https://stackoverflow.com/questions/1352749/multiple-arguments-to-function-called-by-pthread-create
+
 
 
 
