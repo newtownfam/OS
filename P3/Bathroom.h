@@ -30,7 +30,7 @@
 #define BATHROOM_SEEN
 
 struct brGlobal();
-void enter(int Gender);
+int enter(struct brGlobal, int g);
 void leave();
 void initialize();
 void finalize();
