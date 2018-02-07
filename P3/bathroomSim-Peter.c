@@ -40,6 +40,7 @@ struct brGlobal
 };
 
 // create characteristics of thread
+// use enter() here
 void *threadChar(void *arg) 
 {
   printf("%s: Wow! You impregnated a functiont and made a baby thread! \n", (char *) arg);

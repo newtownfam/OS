@@ -7,18 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct br
-{
-	int gender; // -1 for vacant, 0 for female, and 1 for male
-	int mCount;
-	int fCount;
-	int totalUsages;
-	long vacantTime;
-	long occupiedTime;
-	//int averageQL;
-	//int avePeople;
-};
-
 /* enter
  * g is the gender of the thread
  * compare g with global bathroom gender
@@ -27,13 +15,13 @@ struct br
  * if g != brGlobal, return 0
  * if gender is invalid, return -1
  */
-int enter(int g) // needs lockageeeeee
+int enter(struct br* brGlobal, int g) // needs lockageeeeee
 {
 	if(brGlobal->gender == -1) // check if the bathroom is vacant, if so enter
 	{
 		brGlobal->gender = g; // set gender flag
-		assert(mCount == 0 && fCount == 0);
-		brGLobal->totalUsages++;
+		assert(brGlobal->mCount == 0 && brGlobal->fCount == 0);
+		brGlobal->totalUsages++;
 		switch(g)
 		{
 			case 0:
@@ -54,11 +42,11 @@ int enter(int g) // needs lockageeeeee
 		switch(g)
 		{
 			case 0:
-				assert(mCount == 0);
+				assert(brGlobal->mCount == 0);
 				brGlobal->fCount++; // increment female count
 				break;
 			case 1:
-				assert(fCount == 0);
+				assert(brGlobal->fCount == 0);
 				brGlobal->mCount++; // increment male count
 				break;
 			default:
@@ -78,7 +66,7 @@ int enter(int g) // needs lockageeeeee
  *  and check if bathroom is vacant, if so then set the flag to vacant
  * same idea for male
  */
-void leave() // needs lockaging
+void leave(struct br* brGlobal) // needs lockaging
 {
 	if(brGlobal->gender == 0) // if its a female
 	{
@@ -86,16 +74,16 @@ void leave() // needs lockaging
 		brGlobal->fCount--; // decrement females
 		if(brGlobal->fCount == 0) // if last female to leave
 		{
-			brGlobal->gender == -1; // set flag to vacant
+			brGlobal->gender = -1; // set flag to vacant
 		}
 	}
 	if(brGlobal->gender == 1) // if its a male
 	{
-		assert(brGLobal->fCount == 0);
+		assert(brGlobal->fCount == 0);
 		brGlobal->mCount--; // decrement males
 		if(brGlobal->mCount == 0) // if last male to leave
 		{
-			brGlobal->gender == -1; // set flag to vacant
+			brGlobal->gender = -1; // set flag to vacant
 		}
 	}
 }

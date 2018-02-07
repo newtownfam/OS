@@ -29,10 +29,21 @@
 #ifndef BATHROOM_SEEN
 #define BATHROOM_SEEN
 
-struct br();
-struct br * brGlobal;
-int enter(struct brGlobal, int g);
-void leave();
+struct br
+{
+	int gender; // -1 for vacant, 0 for female, and 1 for male
+	int mCount;
+	int fCount;
+	int totalUsages;
+	long vacantTime;
+	long occupiedTime;
+	//int averageQL;
+	//int avePeople;
+};
+
+//struct br * brGlobal;
+int enter(struct br* brGlobal, int g);
+void leave(struct br* brGlobal);
 void initialize();
 void finalize();
 
