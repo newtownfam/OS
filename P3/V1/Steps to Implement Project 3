@@ -110,6 +110,14 @@ Primitives
 -When the last person leaves set the “sign” to vacant
 -For arrivals the arrival time, the time they stay in the bathroom, and the loops they take are random
 
+Test cases for:
+- loopRand
+- arrivalRand
+- stayRand
+- individual
+- initialize
+- finalize
+- printStats
 
 Helpful Notes:
 -Getting PThread ID:
