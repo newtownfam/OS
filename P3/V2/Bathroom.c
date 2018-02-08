@@ -137,3 +137,15 @@ int getGender()
 {
   return brGlobal->gender;
 }
+int getMCount()
+{
+	return brGlobal->mCount;
+}
+int getFCount()
+{
+	return brGlobal->fCount;
+}
+int getTotalU()
+{
+	return brGlobal->totalUsages;
+}

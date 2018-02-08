@@ -85,10 +85,10 @@ useconds_t stayRand(int meanStay){
 void *individual(void* arguments)
 {
 	struct argstruct *args = arguments;
-	long minQueue, aveQueue, maxQueue, brTime; // variables to keep track of thread statistics
-	useconds_t arrival = arrivalRand(args->arrival);
-    useconds_t stay = stayRand(args->stay);
-    int loopcount = loopRand(args->lCount);
+	//long minQueue, aveQueue, maxQueue, brTime; // variables to keep track of thread statistics
+	//useconds_t arrival = arrivalRand(args->arrival);
+    //useconds_t stay = stayRand(args->stay);
+    //int loopcount = loopRand(args->lCount);
     int rc; // use for assert statements
 
 	/* Wait for all threads to be created so they all start at the same time */
