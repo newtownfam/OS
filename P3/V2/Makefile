@@ -4,8 +4,8 @@
 CC = gcc
 CFLAGS = -Wall
 LDFLAGS = -pthread -lm
-OBJS = Bathroom.o brTest.o
-OBJS2 = Bathroom.o bathSim.o
+OBJS = Bathroom.o brTest.o Bathroom.h
+OBJS2 = Bathroom.o bathSim.o Bathroom.h
 
 all: brTest bathSim  # makes two exe, tester and sim
 

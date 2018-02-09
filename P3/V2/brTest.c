@@ -9,52 +9,27 @@
 
 //use this for loop count, based on mean from command line
 int loopRand(int meanLoopCount){
-  int rangeLow, rangeHigh, mean, stdDev, randNum;
-  mean = meanLoopCount;
-  stdDev = mean/2;
-  rangeLow = mean - (3*stdDev);
-  rangeHigh = mean + (3*stdDev);
-  if (rangeLow < 0){
-    rangeLow = 0;
-  }
-  randNum = (sqrt(-2 * log(rangeLow))) * cos(2*M_PI*rangeHigh);
-  printf("random number generated with looprand: %d", randNum);
-  //randNum = (rangeHigh * drand48());
-  return randNum;
+  double a = ((rand() % 10000) / 10000.0);
+  double b = ((rand() % 10000) / 10000.0);
+  double randNum = ((sqrt(-2 * log(a))) * cos(2*M_PI*b));
+  //printf("STATS: randNum Val: [%lf]\n", randNum);
+  return randNum + meanLoopCount;
 }
 
 // rng for arrival
-useconds_t arrivalRand(int meanArrival){
-  int rangeLow, rangeHigh, mean, stdDev;
-  mean = meanArrival;
-  stdDev = mean/2;
-  rangeLow = mean - (3*stdDev);
-  rangeHigh = mean + (3*stdDev);
-  if (rangeLow < 0){
-    rangeLow = 0;
-  }
-  useconds_t randNum;
-  randNum = (sqrt(-2 * log(rangeLow))) * cos(2*M_PI*rangeHigh);
-  printf("random number generated with arrivalrand: %d", randNum);
-  //randNum = (rangeHigh * drand48());
-  return randNum;
+double arrivalRand(double meanArrival){
+  double a = ((rand() % 10000) / 10000.0);
+  double b = ((rand() % 10000) / 10000.0);
+  double randNum = ((sqrt(-2 * log(a))) * cos(2*M_PI*b))/10;
+  return randNum + meanArrival;
 }
 
 // rng for stay
-useconds_t stayRand(int meanStay){
-  int rangeLow, rangeHigh, mean, stdDev;
-  mean = meanStay;
-  stdDev = mean/2;
-  rangeLow = mean - (3*stdDev);
-  rangeHigh = mean + (3*stdDev);
-  if (rangeLow < 0){
-    rangeLow = 0;
-  }
-  useconds_t randNum;
-  randNum = (sqrt(-2 * log(rangeLow))) * cos(2*M_PI*rangeHigh);
-  printf("random number generated with stayrand: %d", randNum);
-  //randNum = (rangeHigh * drand48());
-  return randNum;
+double stayRand(double meanStay){
+  double a = ((rand() % 10000) / 10000.0);
+  double b = ((rand() % 10000) / 10000.0);
+  double randNum = ((sqrt(-2 * log(a))) * cos(2*M_PI*b))/10;
+  return randNum + meanStay;
 }
 
 
@@ -101,28 +76,38 @@ int main()
 	printf("GF: %i, MC: %i, FC: %i, TU, %i\n", getGender(), getMCount(), getFCount(), getTotalU());
 
 	//test random functions
-	printf("\n~~~TESTING RANDOM FUNCTIONS~~~\n");
-	printf("Successfully ran loopRand function with input: [%d] and output: [%d]\n", 0, loopRand(0));
-	printf("Successfully ran loopRand function with input: [%d] and output: [%d]\n", 5, loopRand(5));
-	printf("Successfully ran loopRand function with input: [%d] and output: [%d]\n", 10, loopRand(10));
-	printf("Successfully ran loopRand function with input: [%d] and output: [%d]\n", 15, loopRand(15));
-  printf("Successfully ran loopRand function with input: [%d] and output: [%d]\n", 20, loopRand(20));
-  printf("Successfully ran loopRand function with input: [%d] and output: [%d]\n", 25, loopRand(25));
-  printf("Successfully ran loopRand function with input: [%d] and output: [%d]\n", 30, loopRand(30));
-	printf("Successfully ran stayRand function with input: [%d] and output: [%d]\n", 0, stayRand(0));
-	printf("Successfully ran stayRand function with input: [%d] and output: [%d]\n", 5, stayRand(5));
-	printf("Successfully ran stayRand function with input: [%d] and output: [%d]\n", 10, stayRand(10));
-	printf("Successfully ran stayRand function with input: [%d] and output: [%d]\n", 15, stayRand(15));
-  printf("Successfully ran loopRand function with input: [%d] and output: [%d]\n", 20, stayRand(20));
-  printf("Successfully ran loopRand function with input: [%d] and output: [%d]\n", 25, stayRand(25));
-  printf("Successfully ran loopRand function with input: [%d] and output: [%d]\n", 30, stayRand(30));
-  printf("Successfully ran arrivalRand function with input: [%d] and output: [%d]\n", 0, arrivalRand(0));
-	printf("Successfully ran arrivalRand function with input: [%d] and output: [%d]\n", 5, arrivalRand(5));
-	printf("Successfully ran arrivalRand function with input: [%d] and output: [%d]\n", 10, arrivalRand(10));
-	printf("Successfully ran arrivalRand function with input: [%d] and output: [%d]\n", 15, arrivalRand(15));
-  printf("Successfully ran arrivalRand function with input: [%d] and output: [%d]\n", 20, arrivalRand(20));
-  printf("Successfully ran arrivalRand function with input: [%d] and output: [%d]\n", 25, arrivalRand(25));
-  printf("Successfully ran arrivalRand function with input: [%d] and output: [%d]\n", 30, arrivalRand(30));
+	printf("\n~~~TESTING LOOPRAND FUNCTION~~~\n");
+	printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 1, loopRand(1));
+	printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 2, loopRand(2));
+	printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 3, loopRand(3));
+	printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 4, loopRand(4));
+    printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 5, loopRand(5));
+    printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 5, loopRand(5));
+    printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 5, loopRand(5));
+    printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 6, loopRand(6));
+    printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 6, loopRand(6));
+    printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 6, loopRand(6));
+	printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 6, loopRand(6));
+	printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 10, loopRand(10));
+	printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 15, loopRand(15));
+    printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 20, loopRand(20));
+    printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 25, loopRand(25));
+    printf("Successfully ran loopRand function with input: [%d] and output: [%i]\n", 30, loopRand(30));
+    
+    printf("\n TESTING ARRIVAL/STAY RAND FUNCTIONS\n");
+    printf("Successfully ran stayRand function with input: [%f] and output: [%lf]\n", 0.1, stayRand(0.1));
+    printf("Successfully ran stayRand function with input: [%f] and output: [%lf]\n", 0.2, stayRand(0.2));
+    printf("Successfully ran stayRand function with input: [%f] and output: [%lf]\n", 0.3, stayRand(0.3));
+    printf("Successfully ran stayRand function with input: [%f] and output: [%lf]\n", 0.4, stayRand(0.4));
+    printf("Successfully ran stayRand function with input: [%f] and output: [%lf]\n", 0.5, stayRand(0.5));
+    printf("Successfully ran stayRand function with input: [%f] and output: [%lf]\n", 0.6, stayRand(0.6));
+    printf("Successfully ran stayRand function with input: [%f] and output: [%lf]\n", 0.7, stayRand(0.7));
+    printf("Successfully ran stayRand function with input: [%f] and output: [%lf]\n", 0.8, stayRand(0.8));
+    printf("Successfully ran stayRand function with input: [%f] and output: [%lf]\n", 0.9, stayRand(0.9));
+    printf("Successfully ran stayRand function with input: [%f] and output: [%lf]\n", 1.1, stayRand(1.1));
+    printf("Successfully ran stayRand function with input: [%f] and output: [%lf]\n", 1.5, stayRand(1.5));
+    printf("Successfully ran stayRand function with input: [%f] and output: [%lf]\n", 1.9, stayRand(1.9));
+	
 	return 0;
 
 }

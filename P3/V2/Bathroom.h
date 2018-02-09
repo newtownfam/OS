@@ -57,6 +57,6 @@ int getGender();
 int getMCount();
 int getFCount();
 int getTotalU();
-void printStats();
+void printStats(int gender, int threadNum, int lCount, long minTime, long aveTime, long maxTime);
 
 #endif /* BATHROOM_SEEN */
