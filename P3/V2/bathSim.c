@@ -102,45 +102,45 @@ void *individual(void* arguments)
 	*/
 
 	printf("INDIVIDUAL: assigning random values...\n");
-	args[pthread_self()]->lCount = loopRand(args[pthread_self()]->lCount);
-	args[pthread_self()]->arrival = arrivalRand(args[pthread_self()]->arrival);
-	args[pthread_self()]->stay = stayRand(args[pthread_self()]->stay);
+	args[threadNum]->lCount = loopRand(args[threadNum]->lCount);
+	args[threadNum]->arrival = arrivalRand(args[threadNum]->arrival);
+	args[threadNum]->stay = stayRand(args[threadNum]->stay);
 
 	/* Should wait for all threads to be created, is this too slow? (prolly not) */
-	pthread_mutex_lock(args[pthread_self()]->&lock);
+	pthread_mutex_lock(&lock);
 	god--;
 	while(god>0)
 	{
-		pthread_mutex_lock(args[pthread_self()]->&lock);
+		pthread_mutex_lock(&lock);
 		yield();
-		pthread_mutex_unlock(args[pthread_self()]->&lock);
+		pthread_mutex_unlock(&lock);
 	}
-	pthread_mutex_unlock(args[pthread_self()]->&lock);
+	pthread_mutex_unlock(&lock);
 
 	/* Begin for loop to go through lCount iterations of going to the bathroom */
-	for(int i = 0; i<args[pthread_self()]->lCount; i++)
+	for(int i = 0; i<args[threadNum]->lCount; i++)
 	{
 		/* Quick nap... wait for arrival time */
-		usleep(args[pthread_self()]->arrival);
+		usleep(args[threadNum]->arrival);
 		printf("INDIVIDUAL: about to enter while loop for locks and shit\n");
 
 		while(1)
 		{
 			/* check if can enter bathroom <- that grammar */
-			rc = pthread_mutex_lock(&args[pthread_self()]->lock);
+			rc = pthread_mutex_lock(&args[threadNum]->lock);
 			assert(rc == 0);
-			if(enter(args[pthread_self()]->gender)==1) // if can enter
+			if(enter(args[threadNum]->gender)==1) // if can enter
 			{
 				/* go to the bathroom */
-				rc = pthread_mutex_unlock(&args[pthread_self()]->lock);
+				rc = pthread_mutex_unlock(&args[threadNum]->lock);
 				assert(rc == 0);
 
 				/* sleep (lol) in the bathroom... */
-				usleep(args[pthread_self()]->stay);
+				usleep(args[threadNum]->stay);
 				printf("INDIVIDUAL: in bathroom\n");
 
 				/* leave the bathrooom */
-				rc = pthread_mutex_lock(&args[pthread_self()]->lock);
+				rc = pthread_mutex_lock(&args[threadNum]->lock);
 				assert(rc == 0);
 				leave();
 				printf("INDIVIDUAL: leaving bathroom\n");
@@ -151,10 +151,10 @@ void *individual(void* arguments)
 				 * the lock is freed from this thread, and all other threads can grab the lock */
 				if(getGender() == -1) // Bathroom is vacant so signal threads
 				{
-					rc = pthread_cond_broadcast(&args[pthread_self()]->vacant); // broadcast to all other threads
+					rc = pthread_cond_broadcast(&args[threadNum]->vacant); // broadcast to all other threads
 					assert(rc == 0);
 					// what if we pause here?
-					rc = pthread_mutex_unlock(&args[pthread_self()]->lock);
+					rc = pthread_mutex_unlock(&args[threadNum]->lock);
 					assert(rc == 0);
 					printf("INDIVIDUAL: bathroom vacant\n");
 					br = -1;
@@ -162,7 +162,7 @@ void *individual(void* arguments)
 				}
 				else
 				{
-					rc = pthread_mutex_unlock(&args[pthread_self()]->lock);
+					rc = pthread_mutex_unlock(&args[threadNum]->lock);
 					assert(rc == 0);
 					break; // break out of waiting to do next lCount
 				}
@@ -172,16 +172,16 @@ void *individual(void* arguments)
 				/* wait for the bathroom to be vacant so one can enter */
 				while(br != -1)
 				{
-					rc = pthread_cond_wait(&args[pthread_self()]->vacant, &args[pthread_self()]->lock);
+					rc = pthread_cond_wait(&args[threadNum]->vacant, &args[threadNum]->lock);
 					br = 0;
 				}
 			}
 		}
 	}
 	/* print statistics (do not want more than one thread printing at once so lock) */
-  pthread_mutex_lock(&args[pthread_self()]->printLock);
-  printStats(args[pthread_self()]->gender, args[pthread_self()]->threadNum, args[pthread_self()]->lCount, minQueue, aveQueue, maxQueue);
-  pthread_mutex_unlock(&args[pthread_self()]->printLock);
+  pthread_mutex_lock(&args->printLock);
+  printStats(args[threadNum]->gender, args[threadNum]->threadNum, args[threadNum]->lCount, minQueue, aveQueue, maxQueue);
+  pthread_mutex_unlock(&args->printLock);
   return 0;
 }
 
@@ -223,7 +223,6 @@ int main(int argc, char* argv[])
   /* args will hold all the thread information, and will be used to pass parameters to individual */
   /* This may cause a lot of memory accesses and slow down the threads considerably... */
   /* If this doesn't work try making it an array instead of a pointer */
-  struct argstruct *args\ = malloc((10+nUsers)*(sizeof (struct argstruct)));
 
 	/* god and godLock will ensure all threads are created together */
 	pthread_mutex_t godLock;
@@ -236,6 +235,7 @@ int main(int argc, char* argv[])
   /************************************************************ BEGIN SIMULATION *******************************************************************/  
   for(int i=0; i<nUsers; i++) 
   {
+  	struct argstruct *args = malloc((10+nUsers)*(sizeof (struct argstruct)));
 	//pthread_t thread;
 	int gender = rand() & 1;
 	args[i]->gender = gender;
