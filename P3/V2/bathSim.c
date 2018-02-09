@@ -28,6 +28,8 @@
 #define M_PI = #define M_PI 3.14159265358979323846
 #endif
 
+/**************************************************************** STRUCTS **********************************************************************/
+
 struct argstruct
 {
 	pthread_mutex_t printLock;
@@ -39,6 +41,8 @@ struct argstruct
 	int lCount;
 	int threadNum;
 };
+
+/*********************************************************** HELPER FUNCTIONS **********************************************************************/
 
 //use this for loop count, based on mean from command line
 int loopRand(int meanLoopCount){
@@ -65,6 +69,8 @@ double stayRand(double meanStay){
   return randNum + meanStay;
 }
 
+/***************************************************** INDIVIDUAL (THREAD SIMULATOR) *************************************************************/
+
 /* individual
  * The thread will run with the given specifications:
  *	g - a random num 0 or 1 that defines the gender of the thread
@@ -72,21 +78,16 @@ double stayRand(double meanStay){
  *	stay - the amount of time the thread will stay in the bathroom
  *	lCount - the number of times the thread will loop through the bathroom
  */
-//pthread_mutex_t printLock, pthread_cond_t vacant, pthread_mutex_t lock, int gender, long arrival, long stay, int lCount, int threadNum
 void *individual(void* arguments)
 {
 	struct argstruct *args = arguments;
 	long minQueue = 0;
 	long aveQueue = 0;
 	long maxQueue = 0;
-	//long brTime = 0; // variables to keep track of thread statistics
-	//useconds_t arrival = arrivalRand(args->arrival);
-    //useconds_t stay = stayRand(args->stay);
-    //int loopcount = loopRand(args->lCount);
     int rc = 0; // use for assert statements
     int br = 0; // know if bathroom is empty
 
-	/* Wait for all threads to be created so they all start at the same time
+	/* Wait for all threads to be created so they all start at the same time (NOT WORKING)
   	rc = pthread_mutex_lock(&args->lock);
 	assert(rc == 0);
 
@@ -100,47 +101,60 @@ void *individual(void* arguments)
 	pthread_mutex_unlock(&args->lock);
 	*/
 
-	// loop for lCount
 	printf("INDIVIDUAL: assigning random values...\n");
-	args->lCount = loopRand(args->lCount);
-	args->arrival = arrivalRand(args->arrival);
-	args->stay = stayRand(args->stay);
+	args[threadNum]->lCount = loopRand(args[threadNum]->lCount);
+	args[threadNum]->arrival = arrivalRand(args[threadNum]->arrival);
+	args[threadNum]->stay = stayRand(args[threadNum]->stay);
 
-	for(int i = 0; i<args->lCount; i++)
+	/* Should wait for all threads to be created, is this too slow? (prolly not) */
+	pthread_mutex_lock(&lock);
+	god--;
+	while(god>0)
 	{
-		// wait for arrival time
-		usleep(args->arrival);
+		pthread_mutex_lock(&lock);
+		yield();
+		pthread_mutex_unlock(&lock);
+	}
+	pthread_mutex_unlock(&lock);
+
+	/* Begin for loop to go through lCount iterations of going to the bathroom */
+	for(int i = 0; i<args[threadNum]->lCount; i++)
+	{
+		/* Quick nap... wait for arrival time */
+		usleep(args[threadNum]->arrival);
 		printf("INDIVIDUAL: about to enter while loop for locks and shit\n");
 
 		while(1)
 		{
-			// check if can enter bathroom
-			rc = pthread_mutex_lock(&args->lock);
+			/* check if can enter bathroom <- that grammar */
+			rc = pthread_mutex_lock(&args[threadNum]->lock);
 			assert(rc == 0);
-			if(enter(args->gender)==1) // if can enter
+			if(enter(args[threadNum]->gender)==1) // if can enter
 			{
-				// go to the bathroom
-				rc = pthread_mutex_unlock(&args->lock);
+				/* go to the bathroom */
+				rc = pthread_mutex_unlock(&args[threadNum]->lock);
 				assert(rc == 0);
 
-				usleep(args->stay);
-
+				/* sleep (lol) in the bathroom... */
+				usleep(args[threadNum]->stay);
 				printf("INDIVIDUAL: in bathroom\n");
 
-				rc = pthread_mutex_lock(&args->lock);
+				/* leave the bathrooom */
+				rc = pthread_mutex_lock(&args[threadNum]->lock);
 				assert(rc == 0);
 				leave();
 				printf("INDIVIDUAL: leaving bathroom\n");
 
 
+				/* Chcek if bathroom is vacant */
 				/* QUESTION: How do we handle broadcast so that when it signals the other threads,
 				 * the lock is freed from this thread, and all other threads can grab the lock */
 				if(getGender() == -1) // Bathroom is vacant so signal threads
 				{
-					rc = pthread_cond_broadcast(&args->vacant); // broadcast to all other threads
+					rc = pthread_cond_broadcast(&args[threadNum]->vacant); // broadcast to all other threads
 					assert(rc == 0);
 					// what if we pause here?
-					rc = pthread_mutex_unlock(&args->lock);
+					rc = pthread_mutex_unlock(&args[threadNum]->lock);
 					assert(rc == 0);
 					printf("INDIVIDUAL: bathroom vacant\n");
 					br = -1;
@@ -148,37 +162,38 @@ void *individual(void* arguments)
 				}
 				else
 				{
-					rc = pthread_mutex_unlock(&args->lock);
+					rc = pthread_mutex_unlock(&args[threadNum]->lock);
 					assert(rc == 0);
 					break; // break out of waiting to do next lCount
 				}
 			}
 			else
 			{
-				// wait for the bathroom to be vacant so one can enter
+				/* wait for the bathroom to be vacant so one can enter */
 				while(br != -1)
 				{
-					rc = pthread_cond_wait(&args->vacant, &args->lock);
+					rc = pthread_cond_wait(&args[threadNum]->vacant, &args[threadNum]->lock);
 					br = 0;
 				}
 			}
 		}
 	}
-/* print statistics (do not want more than one thread printing at once so lock) */
-	/* TO_DO FIX THE STATISTICS PRINTING */
+	/* print statistics (do not want more than one thread printing at once so lock) */
   pthread_mutex_lock(&args->printLock);
-  printStats(args->gender, args->threadNum, args->lCount, minQueue, aveQueue, maxQueue); // give shit
+  printStats(args[threadNum]->gender, args[threadNum]->threadNum, args[threadNum]->lCount, minQueue, aveQueue, maxQueue);
   pthread_mutex_unlock(&args->printLock);
   return 0;
 }
 
-
+/**************************************************************** MAIN **********************************************************************/
 
 int main(int argc, char* argv[])
 {
-  //check if valid inputs
+
+/************************************************************** VARIABLES *********************************************************************/
+  /* check if valid inputs */
   assert(argc == 5);
-  //assign inputs
+  /* assign inputs */
   int nUsers;
   int meanLoopCount;
   double meanArrival;
@@ -196,40 +211,54 @@ int main(int argc, char* argv[])
   initialize();
   printf("Initialize function ran...\n");
   
-  // create general mutex and condition variable
+  /* create general mutex and condition variable */
   pthread_mutex_t lock;
   pthread_mutex_t printLock;
+  pthread_mutex_t godLock;
   pthread_cond_t vacant;
   pthread_mutex_init(&lock, NULL);
   pthread_mutex_init(&printLock, NULL);
   pthread_cond_init(&vacant, NULL);
 
-  // create n threads
-  struct argstruct *args = malloc(sizeof (struct argstruct));
-	args->printLock = printLock;
-	args->vacant = vacant;
-	args->lock = lock;
-	args->arrival = meanArrival;
-	args->stay = meanStay;
-	args->lCount = meanLoopCount;
-  
-  pthread_t tid[nUsers];  
+  /* args will hold all the thread information, and will be used to pass parameters to individual */
+  /* This may cause a lot of memory accesses and slow down the threads considerably... */
+  /* If this doesn't work try making it an array instead of a pointer */
+  struct argstruct *args = malloc((10+nUsers)*(sizeof (struct argstruct)));
+
+	/* god and godLock will ensure all threads are created together */
+	pthread_mutex_t godLock;
+	pthread_mutex_init(&godLock);
+	int god = 0;
+
+	pthread_mutex_lock(&godLock);
+  pthread_t tid[nUsers];
+
+  /************************************************************ BEGIN SIMULATION *******************************************************************/  
   for(int i=0; i<nUsers; i++) 
   {
 	//pthread_t thread;
 	int gender = rand() & 1;
-	args->gender = gender;
-	args->threadNum = i;
-	printf("TN; %d\n", args->threadNum);
-	// create a thread
+	args[i]->gender = gender;
+	args[i]->printLock = printLock;
+	args[i]->vacant = vacant;
+	args[i]->lock = lock;
+	args[i]->arrival = meanArrival;
+	args[i]->stay = meanStay;
+	args[i]->lCount = meanLoopCount;
+	args[i]->threadNum = i;
+	//printf("TN; %d\n", args->threadNum);
+
+	/* CREATE THE THREADS */
 	printf("About to create thread #%i\n", i+1);
-	pthread_create(&tid[i], NULL, &individual, (void*) args);
+	god++; // increment god (number of threads created)
+	pthread_create(&tid[i], NULL, &individual, (void*) args[i]);
 	printf("Thread #%i created!\n", i+1);
   }
-  //pthread_cond_broadcast(&vacant);
 
-  /* TO_DO Make sure all threads are created at the same time */
-  
+  pthread_mutex_unlock(&godLock);
+ 
+/************************************************************** END SIMULATION **********************************************************************/
+ 
   for(int i = 0; i<nUsers; i++)
   {
   		printf("Calling pthread_join for thread #%i\n", i+1);
