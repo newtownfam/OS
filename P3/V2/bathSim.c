@@ -28,6 +28,7 @@
 #define M_PI = #define M_PI 3.14159265358979323846
 #endif
 
+int god = 0;
 /**************************************************************** STRUCTS **********************************************************************/
 
 struct argstruct
@@ -36,8 +37,8 @@ struct argstruct
 	pthread_cond_t vacant;
 	pthread_mutex_t lock;
 	int gender;
-	useconds_t arrival;
-	useconds_t stay;
+	double arrival;
+	double stay;
 	int lCount;
 	int threadNum;
 };
@@ -80,10 +81,10 @@ double stayRand(double meanStay){
  */
 void *individual(void* arguments)
 {
-	// struct argstruct *args = arguments;
-	// long minQueue = 0;
-	// long aveQueue = 0;
-	// long maxQueue = 0;
+	struct argstruct *args = arguments;
+	long minQueue = 0;
+	long aveQueue = 0;
+	long maxQueue = 0;
  //    int rc = 0; // use for assert statements
  //    int br = 0; // know if bathroom is empty
 
@@ -164,40 +165,45 @@ void *individual(void* arguments)
 	// }
 
 	/* Should wait for all threads to be created, is this too slow? (prolly not) */
-	pthread_mutex_lock(&lock);
+	pthread_mutex_lock(&args->lock);
 	int try = 0;
 	god--;
 	while(god>0)
 	{
-		pthread_mutex_lock(&lock);
-		yield();
-		pthread_mutex_unlock(&lock);
+		pthread_mutex_lock(&args->lock);
+		sched_yield();
+		pthread_mutex_unlock(&args->lock);
 	}
 	/* try is so that while the threads are waiting for other threads to be created, 
 	 *it can at least assign random variables to speed it up slightly */
-	if(int try = 0)
+	if(try == 0)
 	{
+		try++;
 		/* Assign random variables to the thread */
-		printf("INDIVIDUAL: assigning random values...\n");
-		arguments->lCount = loopRand(arguments->lCount);
-		arguments->arrival = arrivalRand(arguments->arrival);
-		arguments->stay = stayRand(arguments->stay);
+		//printf("INDIVIDUAL: assigning random values...\n");
+		args->lCount = loopRand(args->lCount);
+		args->arrival = arrivalRand(args->arrival);
+		args->stay = stayRand(args->stay);
 	}
-	pthread_mutex_unlock(&lock);
+	pthread_mutex_unlock(&args->lock);
 
 	/* Loop through the lCount times and simulate entering and leaving a bathroom */
-	for(int i = 0; i<arguments->lCount; i++)
+	for(int i = 0; i<args->lCount; i++)
 	{
-		usleep(arguments->arrival);
-		enter(arguments->gender);
-		usleep(arguments->stay);
+		usleep(args->arrival);
+		printf("Before enter\n");
+		enter(args->gender);
+		printf("after enter\n");
+		usleep(args->stay);
+		printf("Before leave\n");
 		leave();
+		printf("After leave\n");
 	}
 
 
 	/* print statistics (do not want more than one thread printing at once so lock) */
 	pthread_mutex_lock(&args->printLock);
-	printStats(arguments->gender, arguments->threadNum, arguments->lCount, minQueue, aveQueue, maxQueue);
+	printStats(args->gender, args->threadNum, args->lCount, minQueue, aveQueue, maxQueue);
 	pthread_mutex_unlock(&args->printLock);
 	return 0;
 }
@@ -231,7 +237,7 @@ int main(int argc, char* argv[])
   /* create general mutex and condition variable */
   pthread_mutex_t lock;
   pthread_mutex_t printLock;
-  pthread_mutex_t godLock;
+  //pthread_mutex_t godLock;
   pthread_cond_t vacant;
   pthread_mutex_init(&lock, NULL);
   pthread_mutex_init(&printLock, NULL);
@@ -242,33 +248,34 @@ int main(int argc, char* argv[])
   /* If this doesn't work try making it an array instead of a pointer */
 
 	/* god and godLock will ensure all threads are created together */
-	pthread_mutex_t godLock;
-	pthread_mutex_init(&godLock);
-	int god = 0;
+   pthread_mutex_t godLock;
+   pthread_mutex_init(&godLock, NULL);
+   int god = 0;
 
-	pthread_mutex_lock(&godLock);
-  pthread_t tid[nUsers];
-
+   pthread_mutex_lock(&godLock);
+   pthread_t tid[nUsers];
+   struct argstruct *args = (struct argstruct *)malloc(nUsers*sizeof(struct argstruct));
+ 
   /************************************************************ BEGIN SIMULATION *******************************************************************/  
   for(int i=0; i<nUsers; i++) 
   {
 	//pthread_t thread;
 	int gender = rand() & 1;
-	args[i]->gender = gender;
-	args[i]->printLock = printLock;
-	args[i]->vacant = vacant;
-	args[i]->lock = lock;
-	args[i]->arrival = meanArrival;
-	args[i]->stay = meanStay;
-	args[i]->lCount = meanLoopCount;
-	args[i]->threadNum = i;
+	args[i].gender = gender;
+	args[i].printLock = printLock;
+	args[i].vacant = vacant;
+	args[i].lock = lock;
+	args[i].arrival = meanArrival;
+	args[i].stay = meanStay;
+	args[i].lCount = meanLoopCount;
+	args[i].threadNum = i;
 	//printf("TN; %d\n", args->threadNum);
 
 	/* CREATE THE THREADS */
-	printf("About to create thread #%i\n", i+1);
+	//printf("About to create thread #%i\n", i+1);
 	god++; // increment god (number of threads created)
-	pthread_create(&tid[i], NULL, &individual, (void*) args[i]);
-	printf("Thread #%i created!\n", i+1);
+	pthread_create(&tid[i], NULL, &individual, (void*) &args[i]);
+	printf("Thread #%i created with gender: %i \n", i+1, args[i].gender);
   }
 
   pthread_mutex_unlock(&godLock);
@@ -277,8 +284,8 @@ int main(int argc, char* argv[])
  
   for(int i = 0; i<nUsers; i++)
   {
-  		printf("Calling pthread_join for thread #%i\n", i+1);
 		pthread_join(tid[i], NULL);
+		printf("Called pthread_join for thread #%i\n", i+1);
   }
   printf("About to run finalize() and end bathSim Program\n");
   finalize();

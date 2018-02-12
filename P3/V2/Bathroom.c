@@ -24,7 +24,7 @@
 
 int enter(int g)
 {
-	pthread_mutex_lock(brGlobal->&lock);
+	pthread_mutex_lock(&brGlobal->lock);
 	if(brGlobal->gender == -1) // check if the bathroom is vacant, if so enter
 	{
 		brGlobal->gender = g; // set gender flag
@@ -65,10 +65,10 @@ int enter(int g)
 	}
 	else // would be inappropriate to enter at this time, begin waiting
 	{
-		pthread_cond_wait(&vacant);
+		pthread_cond_wait(&brGlobal->vacant, &brGlobal->lock);
 		return 0; // failure
 	}
-	pthread_mutex_unlock(&lock);
+	pthread_mutex_unlock(&brGlobal->lock);
 }
 
 /* leave
@@ -78,30 +78,34 @@ int enter(int g)
  */
 void leave()
 {
-	pthread_mutex_lock(&lock);
+	//int rc;
+	printf("About to lock in leave fn\n");
+	pthread_mutex_lock(&brGlobal->lock); // DO WE NEED LOCKS FOR LEAVE?
+	//assert(rc == 0);
+	printf("leave fn successfully Locked\n");
 	if(brGlobal->gender == 0) // if its a female
 	{
 		assert(brGlobal->mCount == 0);
 		brGlobal->fCount--; // decrement females
-		assert(male == 0);
+		assert(brGlobal->mCount == 0);
 		if(brGlobal->fCount == 0) // if last female to leave
 		{
 			brGlobal->gender = -1; // set flag to vacant
-			pthread_cond_broadcast(&vacant);
+			pthread_cond_broadcast(&brGlobal->vacant);
 		}
 	}
 	if(brGlobal->gender == 1) // if its a male
 	{
 		assert(brGlobal->fCount == 0);
 		brGlobal->mCount--; // decrement males
-		assert(female == 0);
+		assert(brGlobal->fCount == 0);
 		if(brGlobal->mCount == 0) // if last male to leave
 		{
 			brGlobal->gender = -1; // set flag to vacant
-			pthread_cond_broadcast(&vacant);
+			pthread_cond_broadcast(&brGlobal->vacant);
 		}
 	}
-	pthread_mutex_unlock(&lock);
+	pthread_mutex_unlock(&brGlobal->lock);
 }
 
 /* Initializes the threads
@@ -116,7 +120,8 @@ void initialize()
 	brGlobal->totalUsages = 0;
 	brGlobal->vacantTime = 0;
 	brGlobal->occupiedTime = 0;
-  
+	pthread_mutex_init(&brGlobal->lock, NULL);
+	pthread_cond_init(&brGlobal->vacant, NULL);
 }
 
 /* Prints out all statistics and exits
@@ -133,7 +138,7 @@ void finalize()
  */
 void printStats(int gender, int threadNum, int lCount, long minTime, long aveTime, long maxTime)
 {
-	printf("~~~THREAD [%d] STATISTICS~~~\n", threadNum);
+  printf("~~~THREAD [%d] STATISTICS~~~\n", threadNum);
   printf("Gender (0 for female and 1 for male): %d\n", gender);
   printf("Loop count: %d\n", lCount);
   printf("Min time spent in queue: %ld\n", minTime);
