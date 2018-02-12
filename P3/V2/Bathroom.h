@@ -44,6 +44,8 @@ struct br
 	long occupiedTime;
 	//int averageQL;
 	//int avePeople;
+	pthread_mutex_t lock;
+	pthread_cond_t vacant;
 };
 
 //enum gender {male = 1, female = 0};

@@ -24,6 +24,7 @@
 
 int enter(int g)
 {
+	pthread_mutex_lock(brGlobal->&lock);
 	if(brGlobal->gender == -1) // check if the bathroom is vacant, if so enter
 	{
 		brGlobal->gender = g; // set gender flag
@@ -64,8 +65,10 @@ int enter(int g)
 	}
 	else // would be inappropriate to enter at this time, begin waiting
 	{
+		pthread_cond_wait(&vacant);
 		return 0; // failure
 	}
+	pthread_mutex_unlock(&lock);
 }
 
 /* leave
@@ -75,24 +78,30 @@ int enter(int g)
  */
 void leave()
 {
+	pthread_mutex_lock(&lock);
 	if(brGlobal->gender == 0) // if its a female
 	{
 		assert(brGlobal->mCount == 0);
 		brGlobal->fCount--; // decrement females
+		assert(male == 0);
 		if(brGlobal->fCount == 0) // if last female to leave
 		{
 			brGlobal->gender = -1; // set flag to vacant
+			pthread_cond_broadcast(&vacant);
 		}
 	}
 	if(brGlobal->gender == 1) // if its a male
 	{
 		assert(brGlobal->fCount == 0);
 		brGlobal->mCount--; // decrement males
+		assert(female == 0);
 		if(brGlobal->mCount == 0) // if last male to leave
 		{
 			brGlobal->gender = -1; // set flag to vacant
+			pthread_cond_broadcast(&vacant);
 		}
 	}
+	pthread_mutex_unlock(&lock);
 }
 
 /* Initializes the threads
